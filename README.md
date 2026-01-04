@@ -65,6 +65,7 @@ cd FuzzingTest_Project
 # 注意：构建过程使用了南京大学镜像源加速
 docker build -t my-fuzzer:v1 ./docker
 
+
 ```
 
 ### 2. 启动测试
@@ -78,10 +79,19 @@ docker run -it -v ${PWD}:/app --name fuzzer_env my-fuzzer:v1
 # 2. 进入容器终端
 docker exec -it fuzzer_env /bin/bash
 
+# 1. 安装dos2unix（Debian/Ubuntu系容器，如你的环境）
+apt update && apt install -y dos2unix
+
+# 2. 转换脚本文件的换行符（Linux LF格式）
+dos2unix run_fuzz_task.sh
+
+# 3. 再次执行脚本，即可正常运行
+./run_fuzz_task.sh
 # 3. 运行自动化测试任务
 # 该脚本会自动编译 targets/ 下的 10 个目标程序，并依次进行模糊测试
 cd /app
 ./run_fuzz_task.sh
+
 
 ```
 
