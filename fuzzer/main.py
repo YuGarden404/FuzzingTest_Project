@@ -31,7 +31,28 @@ class GreyBoxFuzzer:
         self.env["__AFL_SHM_ID"] = str(self.shm.id)
 
         self.global_visited_indices = set()
-        self.corpus = [b"init"]  # 初始种子 (建议优化为读取 seeds 目录)
+
+
+
+        # === 修改为：尝试加载外部种子 ===
+        self.corpus = []
+        seed_dir = os.path.join(project_root, "seeds")
+
+        # 如果 seeds 目录存在，尝试读取里面的文件
+        if os.path.exists(seed_dir):
+            for f in os.listdir(seed_dir):
+                f_path = os.path.join(seed_dir, f)
+                if os.path.isfile(f_path):
+                    with open(f_path, "rb") as seed_f:
+                        self.corpus.append(seed_f.read())
+        # 如果没读到任何种子，才使用默认值
+        if not self.corpus:
+            self.corpus = [b"init"]
+            print("[!] Warning: No external seeds found, using default b'init'")
+        else:
+            print(f"[*] Loaded {len(self.corpus)} seeds from {seed_dir}")
+
+
         self.exec_count = 0
         self.start_time = time.time()
 
@@ -173,7 +194,9 @@ class GreyBoxFuzzer:
                     stdin_mode = subprocess.PIPE
 
                 try:
-                    proc = subprocess.Popen(cmd_args, stdin=stdin_mode, stderr=subprocess.PIPE, env=self.env)
+                    # 添加 stdout=subprocess.DEVNULL
+                    proc = subprocess.Popen(cmd_args, stdin=stdin_mode, stdout=subprocess.DEVNULL,
+                                            stderr=subprocess.PIPE, env=self.env)
                     if use_stdin:
                         proc.communicate(input=candidate, timeout=0.1)
                     else:
