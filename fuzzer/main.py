@@ -2,33 +2,26 @@ import os, subprocess, sysv_ipc, random, time, sys
 
 # --- 配置区 ---
 MAP_SIZE = 65536
-# --- 在类定义之外或作为类的常量 ---
+
+# --- 感兴趣值 (Magic Numbers) ---
 # 8位感兴趣值 (例如: -128, -1, 0, 1, 16, 32...)
-INTERESTING_8 = [
-    -128, -1, 0, 1, 16, 32, 64, 100, 127
-]
+INTERESTING_8 = [-128, -1, 0, 1, 16, 32, 64, 100, 127]
 # 16位感兴趣值 (例如: -32768, -1, 0, MAX_UINT16...)
-INTERESTING_16 = [
-    -32768, -129, 128, 255, 256, 512, 1000, 1024, 4096, 32767, 65535
-]
+INTERESTING_16 = [-32768, -129, 128, 255, 256, 512, 1000, 1024, 4096, 32767, 65535]
 # 32位感兴趣值
-INTERESTING_32 = [
-    -2147483648, -100663046, -32769, 32768, 65536, 100000, 2147483647
-]
+INTERESTING_32 = [-2147483648, -100663046, -32769, 32768, 65536, 100000, 2147483647]
+
 
 class GreyBoxFuzzer:
     def __init__(self, target_path):
         self.target_path = target_path
+        self.target_name = os.path.basename(target_path)  # 获取文件名 (如 target1)
 
-        # === 1. 路径修复：动态计算项目根目录 ===
-        # 获取当前脚本 (main.py) 所在的目录 (即 fuzzer/)
+        # === 路径修复：动态计算项目根目录 ===
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        # 获取项目根目录 (即 fuzzer/ 的上一级)
         project_root = os.path.dirname(current_dir)
-        # 拼接 out 目录路径
         out_dir = os.path.join(project_root, "out")
 
-        # 确保 out 目录存在，如果不存在则创建
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
 
@@ -38,42 +31,27 @@ class GreyBoxFuzzer:
         self.env["__AFL_SHM_ID"] = str(self.shm.id)
 
         self.global_visited_indices = set()
-        self.corpus = [b"init"]  # 初始种子
+        self.corpus = [b"init"]  # 初始种子 (建议优化为读取 seeds 目录)
         self.exec_count = 0
         self.start_time = time.time()
 
-        # 使用动态计算出的绝对路径，避免相对路径报错
-        self.stats_file = os.path.join(out_dir, f"stats_{os.path.basename(target_path)}.csv")
+        self.stats_file = os.path.join(out_dir, f"stats_{self.target_name}.csv")
 
-    # 2. 变异组件
-    # 在 GreyBoxFuzzer 类中添加 splice 方法
+    # === 变异算子实现 ===
     def splice(self, data):
-        # 如果语料库太少，没法拼接，直接返回原数据
-        if len(self.corpus) < 2:
-            return data
-
-        # 随机找另一个种子
+        if len(self.corpus) < 2: return data
         other = random.choice(self.corpus)
-
-        # 随机找个切割点
         cut_at = random.randint(0, min(len(data), len(other)))
-
-        # 拼接：前半段用自己的，后半段用别人的
         return data[:cut_at] + other[cut_at:]
 
-        # === 变异算子实现 ===
-
     def _bitflip(self, data):
-        """Bitflip: 翻转 1 个 bit"""
         res = bytearray(data)
         if not res: return res
         idx = random.randint(0, len(res) - 1)
-        bit_idx = random.randint(0, 7)
-        res[idx] ^= (1 << bit_idx)  # 异或操作实现翻转
+        res[idx] ^= (1 << random.randint(0, 7))
         return bytes(res)
 
     def _byteflip(self, data):
-        """Byteflip: 翻转整个 byte (按位取反)"""
         res = bytearray(data)
         if not res: return res
         idx = random.randint(0, len(res) - 1)
@@ -81,80 +59,39 @@ class GreyBoxFuzzer:
         return bytes(res)
 
     def _arith(self, data):
-        """Arith: 算术加减运算 (例如 +1, -1, +10...)"""
         res = bytearray(data)
         if not res: return res
         idx = random.randint(0, len(res) - 1)
-        # 随机加或减一个小整数
-        val = random.randint(-35, 35)
-        # 确保结果在 0-255 之间 (模拟 8bit 溢出)
-        res[idx] = (res[idx] + val) & 0xFF
+        res[idx] = (res[idx] + random.randint(-35, 35)) & 0xFF
         return bytes(res)
 
     def _interest(self, data):
-        """Interest: 替换为感兴趣的整数 (边界值)"""
         res = bytearray(data)
         if not res: return res
-
-        # 随机选择替换 1个字节(8bit)、2个字节(16bit) 还是 4个字节(32bit)
         kind = random.choice([8, 16, 32])
-
-        if kind == 8:
-            val = random.choice(INTERESTING_8)
-            idx = random.randint(0, len(res) - 1)
-            res[idx] = val & 0xFF
-
-        elif kind == 16 and len(res) >= 2:
-            val = random.choice(INTERESTING_16)
-            idx = random.randint(0, len(res) - 2)
-            # 大端序或小端序随机
-            import struct
-            order = random.choice(['<', '>'])
-            # 将整数打包成 bytes 并替换
-            try:
-                chunk = struct.pack(f'{order}h', val)
-                res[idx:idx + 2] = chunk
-            except:
-                pass  # 忽略打包错误
-
-        elif kind == 32 and len(res) >= 4:
-            val = random.choice(INTERESTING_32)
-            idx = random.randint(0, len(res) - 4)
-            import struct
-            order = random.choice(['<', '>'])
-            try:
-                chunk = struct.pack(f'{order}i', val)
-                res[idx:idx + 4] = chunk
-            except:
-                pass
-
-            return bytes(res)
+        import struct
+        try:
+            if kind == 8:
+                res[random.randint(0, len(res) - 1)] = random.choice(INTERESTING_8) & 0xFF
+            elif kind == 16 and len(res) >= 2:
+                idx = random.randint(0, len(res) - 2)
+                res[idx:idx + 2] = struct.pack(random.choice(['<', '>']) + 'h', random.choice(INTERESTING_16))
+            elif kind == 32 and len(res) >= 4:
+                idx = random.randint(0, len(res) - 4)
+                res[idx:idx + 4] = struct.pack(random.choice(['<', '>']) + 'i', random.choice(INTERESTING_32))
+        except:
+            pass
+        return bytes(res)
 
     def _havoc(self, data):
-        """Havoc: 大破坏模式 (多次叠加各种变异)"""
         res = data
-        # 随机进行 2 到 8 次变异叠加
         for _ in range(random.randint(2, 8)):
-            # 随机挑选一个变异算子执行
-            operator = random.choice([
-                self._bitflip,
-                self._byteflip,
-                self._arith,
-                self._interest,
-                # 还可以加入块删除、块插入等
-            ])
+            operator = random.choice([self._bitflip, self._byteflip, self._arith, self._interest])
             res = operator(res)
         return res
 
-        # === 主变异调度函数 ===
     def mutate(self, data):
-        """
-        调度器: 随机选择一种变异策略
-        """
-        if not data: return b"a"  # 防止空数据
-
-        # 按照一定概率选择变异策略
-        # Havoc 应该是概率最大的，因为它能产生更多样化的输入
+        if not data: return b"a"
         rand = random.random()
         if rand < 0.1:
             return self._bitflip(data)
@@ -165,81 +102,138 @@ class GreyBoxFuzzer:
         elif rand < 0.6:
             return self._interest(data)
         else:
-            return self._havoc(data)  # 40% 的概率进入 Havoc 模式
+            return self._havoc(data)
 
-    # 3. 能量调度组件 (Power Schedule)
     def calculate_energy(self, seed_coverage_len):
-        # 覆盖越多，能量越高
         return min(max(5, seed_coverage_len * 2), 50)
 
-    def start(self, timeout=60):  # 默认每个目标跑 60 秒
-        print(f"[*] 正在测试目标: {self.target_path}")
+    # === 核心运行逻辑 ===
+    def start(self, timeout=86400):
+        print(f"[*] 正在测试目标: {self.target_name} ({self.target_path})")
         with open(self.stats_file, "w") as f:
             f.write("time,cov\n")
 
-        # === 新增：上一次记录的时间 ===
         last_log_time = time.time()
 
+        # 准备临时输入文件路径 (用于文件输入的 targets)
+        temp_input_file = os.path.join(os.path.dirname(self.target_path), f".cur_input_{self.target_name}")
+
         while time.time() - self.start_time < timeout:
-            # ... (种子选择和变异逻辑保持不变) ...
+            # 1. 种子调度
             self.corpus.sort(key=len)
             top_k = max(1, int(len(self.corpus) * 0.2))
             seed_data = random.choice(self.corpus[:top_k])
             energy = self.calculate_energy(len(self.global_visited_indices))
 
             for _ in range(energy):
-                # ... (变异和拼接逻辑保持不变) ...
+                # 2. 变异
                 current_seed = seed_data
                 if random.random() < 0.1:
                     current_seed = self.splice(current_seed)
                 candidate = self.mutate(current_seed)
 
-                # 执行组件
+                # 3. 构造运行命令 (适配 Target 1-10)
+                cmd_args = [self.target_path]
+                use_stdin = False
+
+                # 根据作业文档的 AFL-CMD 进行适配
+                if "target1" in self.target_name:  # cxxfilt
+                    use_stdin = True
+                elif "target2" in self.target_name:  # readelf -a @@
+                    cmd_args.extend(["-a", temp_input_file])
+                elif "target3" in self.target_name:  # nm-new @@
+                    cmd_args.append(temp_input_file)
+                elif "target4" in self.target_name:  # objdump -d @@
+                    cmd_args.extend(["-d", temp_input_file])
+                elif "target5" in self.target_name:  # djpeg @@
+                    cmd_args.append(temp_input_file)
+                elif "target6" in self.target_name:  # readpng (文档显示直接运行，通常读 stdin)
+                    use_stdin = True
+                elif "target7" in self.target_name:  # xmllint @@
+                    cmd_args.append(temp_input_file)
+                elif "target8" in self.target_name:  # lua @@
+                    cmd_args.append(temp_input_file)
+                elif "target9" in self.target_name:  # mjs -f @@
+                    cmd_args.extend(["-f", temp_input_file])
+                elif "target10" in self.target_name:  # tcpdump -nr @@
+                    cmd_args.extend(["-nr", temp_input_file])
+                else:
+                    # 默认策略：假设是文件输入
+                    cmd_args.append(temp_input_file)
+
+                # 4. 执行目标
                 self.shm.write(b'\x00' * MAP_SIZE)
-                proc = subprocess.Popen([self.target_path], stdin=subprocess.PIPE, stderr=subprocess.PIPE, env=self.env)
+
+                # 如果需要文件输入，先写入临时文件
+                if not use_stdin:
+                    with open(temp_input_file, "wb") as f:
+                        f.write(candidate)
+                    stdin_mode = subprocess.DEVNULL
+                else:
+                    stdin_mode = subprocess.PIPE
+
                 try:
-                    proc.communicate(input=candidate, timeout=0.1)
-                except:
+                    proc = subprocess.Popen(cmd_args, stdin=stdin_mode, stderr=subprocess.PIPE, env=self.env)
+                    if use_stdin:
+                        proc.communicate(input=candidate, timeout=0.1)
+                    else:
+                        proc.communicate(timeout=0.1)
+                except subprocess.TimeoutExpired:
                     proc.kill()
                     proc.wait()
+                except Exception as e:
+                    # print(f"Error: {e}")
+                    if proc.poll() is None:
+                        proc.kill()
+                        proc.wait()
 
-                # 评估组件
+                # 5. 收集反馈
                 bitmap = self.shm.read(MAP_SIZE)
                 current_indices = set(i for i, v in enumerate(bitmap) if v > 0)
 
-                # 发现新路径：立即记录
+                # 发现新路径
                 if current_indices and not current_indices.issubset(self.global_visited_indices):
                     self.global_visited_indices.update(current_indices)
                     self.corpus.append(candidate)
                     with open(self.stats_file, "a") as f:
                         f.write(f"{time.time() - self.start_time:.2f},{len(self.global_visited_indices)}\n")
-                    last_log_time = time.time()  # 更新记录时间
+                    last_log_time = time.time()
 
-                # === 关键修改：每隔 1 秒强制记录一次状态 (心跳包) ===
-                # 这样即使没有新发现，图表上也会有一条横线，证明 Fuzzer 活着
+                # 心跳记录 (每 1 秒强制记录一次)
                 if time.time() - last_log_time > 1.0:
                     with open(self.stats_file, "a") as f:
                         f.write(f"{time.time() - self.start_time:.2f},{len(self.global_visited_indices)}\n")
                     last_log_time = time.time()
 
-                if proc.returncode == 66 or (proc.returncode is not None and proc.returncode < 0):
-                    # print(f"[!] 发现崩溃: {self.target_path}") # 注释掉，避免刷屏
-                    pass
+        # 清理临时文件
+        if os.path.exists(temp_input_file):
+            try:
+                os.remove(temp_input_file)
+            except:
+                pass
+
         return False
 
 
 if __name__ == "__main__":
     target = sys.argv[1] if len(sys.argv) > 1 else "./target/target_instrumented"
-    # 如果没传参数且默认路径不存在，尝试智能寻找（可选增强）
-    if not os.path.exists(target) and target == "./target/target_instrumented":
-        # 尝试去上级目录找
-        potential_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "target",
-                                      "target_instrumented")
-        if os.path.exists(potential_path):
-            target = potential_path
+
+    # 支持从命令行传入运行时间 (秒)
+    run_time = 86400  # 默认 24 小时
+    if len(sys.argv) > 2:
+        try:
+            run_time = int(sys.argv[2])
+        except:
+            pass
+
+    # 智能查找路径
+    if not os.path.exists(target):
+        potential = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "target",
+                                 "target_instrumented")
+        if os.path.exists(potential): target = potential
 
     f = GreyBoxFuzzer(target)
     try:
-        f.start(timeout=30)  # 每个目标跑 30 秒进行快速演示
+        f.start(timeout=run_time)
     finally:
         f.shm.remove()
