@@ -11,7 +11,8 @@ out存放数据的输出和图片<br>
 seeds存放测试的种子<br>
 target存放测试用的C语言程序<br>
 
-结构：
+结构：<br>
+```
 FuzzingTest
 |-docker
 |   |-Dockerfile
@@ -27,4 +28,5 @@ FuzzingTest
 |-.gitignore
 |-README.md
 |-run_fuzz_task.sh #自动化测试脚本
+```
 
