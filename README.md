@@ -63,8 +63,7 @@ cd FuzzingTest_Project
 
 # 2. 构建镜像 (自动配置 AFL++ 和 Python 环境)
 # 注意：构建过程使用了南京大学镜像源加速
-docker build -t my-fuzzer:v1 ./docker
-
+docker build -t my-fuzzer:v1 -f docker/Dockerfile .
 
 ```
 
@@ -73,25 +72,18 @@ docker build -t my-fuzzer:v1 ./docker
 所有测试任务均在容器内自动完成。
 
 ```bash
-# 1. 启动容器 (将当前目录挂载到容器内的 /app)
+# 1. 启动并进入容器 (将当前目录挂载到容器内的 /app，以便保存测试结果)
 docker run -it -v ${PWD}:/app --name fuzzer_env my-fuzzer:v1
 
-# 2. 进入容器终端
-docker exec -it fuzzer_env /bin/bash
+# --- 以下命令在容器终端内执行 ---
 
-# 1. 安装dos2unix（Debian/Ubuntu系容器，如你的环境）
-apt update && apt install -y dos2unix
-
-# 2. 转换脚本文件的换行符（Linux LF格式）
+# 2. 解决潜在的 Windows 换行符问题 (如果脚本无法运行)
 dos2unix run_fuzz_task.sh
 
-# 3. 再次执行脚本，即可正常运行
-./run_fuzz_task.sh
 # 3. 运行自动化测试任务
-# 该脚本会自动编译 targets/ 下的 10 个目标程序，并依次进行模糊测试
+# 该脚本会自动编译 targets/ 下的 10 个目标程序，并依次并行进行模糊测试
 cd /app
 ./run_fuzz_task.sh
-
 
 ```
 
