@@ -28,5 +28,6 @@ FuzzingTest
 |-.gitignore
 |-README.md
 |-run_fuzz_task.sh #自动化测试脚本
+|-requirements.txt #需要配置的环境
 ```
 

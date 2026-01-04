@@ -1,55 +1,68 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+import glob
 
 
-def generate_report():
-    csv_file = "/app/out/fuzz_stats.csv"
-    if not os.path.exists(csv_file):
-        print("错误：找不到统计数据文件！")
+def generate_multi_target_report():
+    out_dir = "/app/out"
+    # 获取目录下所有 stats_*.csv 文件
+    csv_files = glob.glob(os.path.join(out_dir, "stats_target*.csv"))
+
+    if not csv_files:
+        print(f"错误：在 {out_dir} 中找不到任何 stats_target*.csv 文件！")
         return
 
-    # 1. 读取数据
-    df = pd.read_csv(csv_file)
+    plt.figure(figsize=(12, 7))
 
-    # 2. 绘制覆盖率增长曲线
-    plt.figure(figsize=(10, 6))
-    plt.plot(df['timestamp'], df['coverage'], label='Edges Found', color='blue', linewidth=2)
-    plt.title('Fuzzing Coverage Growth', fontsize=15)
+    summary_data = []
+
+    # 循环读取每个目标的数据并绘图
+    for csv_file in sorted(csv_files):
+        target_name = os.path.basename(csv_file).replace("stats_", "").replace(".csv", "")
+        df = pd.read_csv(csv_file)
+
+        if df.empty:
+            continue
+
+        # 绘制曲线
+        plt.plot(df['time'], df['cov'], label=target_name, linewidth=1.5)
+
+        # 收集汇总信息
+        summary_data.append({
+            "Target": target_name,
+            "Max Coverage": df['cov'].max(),
+            "Total Time": df['time'].max()
+        })
+
+    # 图表美化
+    plt.title('Multi-Target Fuzzing Coverage Comparison', fontsize=16)
     plt.xlabel('Time (seconds)', fontsize=12)
-    plt.ylabel('Total Edges Discovered', fontsize=12)
-    plt.grid(True, linestyle='--', alpha=0.7)
-    plt.legend()
+    plt.ylabel('Edges Discovered', fontsize=12)
+    plt.legend(loc='upper left', bbox_to_anchor=(1, 1))  # 标签放在图外
+    plt.grid(True, linestyle='--', alpha=0.6)
+    plt.tight_layout()
 
-    # 保存图片
-    plot_path = "/app/out/coverage_plot.png"
+    # 保存对比图
+    plot_path = os.path.join(out_dir, "multi_target_comparison.png")
     plt.savefig(plot_path)
-    print(f"[+] 可视化图表已保存至: {plot_path}")
+    print(f"[+] 10条曲线对比图已生成: {plot_path}")
 
-    # 3. 生成 Markdown 报告总结
-    total_time = df['timestamp'].iloc[-1]
-    total_execs = df['exec_count'].iloc[-1]
-    max_cov = df['coverage'].iloc[-1]
+    # 生成 Markdown 报告
+    report_path = os.path.join(out_dir, "experiment_report.md")
+    with open(report_path, "w") as f:
+        f.write("# Fuzzing 实验多目标测试报告\n\n")
+        f.write("## 1. 测试汇总表格\n\n")
+        f.write("| 目标名称 | 最终覆盖边数 | 测试耗时 (s) |\n")
+        f.write("| :--- | :--- | :--- |\n")
+        for item in summary_data:
+            f.write(f"| {item['Target']} | {item['Max Coverage']} | {item['Total Time']:.2f} |\n")
 
-    report = f"""
-# Fuzzing 测试任务报告
+        f.write("\n\n## 2. 覆盖率增长对比图\n\n")
+        f.write("![Coverage Comparison](multi_target_comparison.png)\n")
 
-## 1. 核心统计数据
-- **测试总时长**: {total_time:.2f} 秒
-- **总执行次数**: {total_execs} 次
-- **平均执行速度**: {int(total_execs / total_time)} execs/s
-- **最终覆盖边数**: {max_cov}
-
-## 2. 结论分析
-- 如果曲线在后期趋于平缓，说明 Fuzzer 遇到了难以突破的逻辑门槛。
-- 捕获的 Crash 文件已保存在 `/app/out/` 目录下。
-
-![覆盖率曲线](coverage_plot.png)
-"""
-    with open("/app/out/report.md", "w") as f:
-        f.write(report)
-    print("[+] 测试报告 (Markdown) 已生成！")
+    print(f"[+] 实验汇总报告已生成: {report_path}")
 
 
 if __name__ == "__main__":
-    generate_report()
+    generate_multi_target_report()
