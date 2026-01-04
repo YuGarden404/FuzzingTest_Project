@@ -2,7 +2,7 @@
 mkdir -p ./out
 
 echo "=== 开始 10 目标自动化 Fuzzing 任务 ==="
- 
+
 for i in {1..10}
 do
     TARGET_BIN="./targets/target$i"
@@ -18,7 +18,7 @@ do
     # 2. 运行 Fuzzer
     # 注意：这里传入了 30，对应 main.py 的 argv[2]，表示只跑 30 秒
     # 如果你想跑久一点，把 30 改成 60 或者 300
-    python3 fuzzer/main.py $TARGET_BIN 30
+    python3 fuzzer/main.py $TARGET_BIN 5
 
     echo "[+] 目标 $i 测试完成"
     echo "--------------------------------"
