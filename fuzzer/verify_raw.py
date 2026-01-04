@@ -9,7 +9,7 @@ def run_and_get_raw_shm(input_bytes):
     env = os.environ.copy()
     env["__AFL_SHM_ID"] = str(shm.id)
 
-    proc = subprocess.Popen(["/app/target/target_instrumented"],
+    proc = subprocess.Popen(["./target/target_instrumented"],
                             stdin=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
     _, stderr = proc.communicate(input=input_bytes)
 

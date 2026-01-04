@@ -5,7 +5,7 @@ import glob
 
 
 def generate_multi_target_report():
-    out_dir = "/app/out"
+    out_dir = "./out"
     # 获取目录下所有 stats_*.csv 文件
     csv_files = glob.glob(os.path.join(out_dir, "stats_target*.csv"))
 

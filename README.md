@@ -30,7 +30,4 @@ FuzzingTest
 |-run_fuzz_task.sh #自动化测试脚本
 |-requirements.txt #需要配置的环境
 ```
-组员拉取代码后，只需要在自己的环境运行：
-```
-pip install -r requirements.txt
-```
+
