@@ -2,7 +2,7 @@ import os
 import subprocess
 import sysv_ipc
 
-TARGET_PATH = "/app/target/target_instrumented"
+TARGET_PATH = "./target/target_instrumented"
 MAP_SIZE = 65536
 
 
