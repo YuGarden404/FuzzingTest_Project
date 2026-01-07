@@ -5,6 +5,7 @@ import random
 import time
 import sys
 import struct
+import hashlib
 
 # --- 配置区 ---
 MAP_SIZE = 65536
@@ -25,6 +26,28 @@ class GreyBoxFuzzer:
         self.project_root = os.path.dirname(current_dir)
         self.out_dir = os.path.join(self.project_root, "out")
 
+        # === 新增：AFL风格目录结构 ===
+        self.target_out_dir = os.path.join(self.out_dir, self.target_name)
+        self.queue_dir = os.path.join(self.target_out_dir, "queue")
+        self.crashes_dir = os.path.join(self.target_out_dir, "crashes")
+        self.hangs_dir = os.path.join(self.target_out_dir, "hangs")
+        
+        for d in [self.queue_dir, self.crashes_dir, self.hangs_dir]:
+            if not os.path.exists(d):
+                os.makedirs(d)
+
+        # 保存 cmdline
+        with open(os.path.join(self.target_out_dir, "cmdline"), "w") as f:
+            f.write(f"{sys.argv[0]} {target_path}")
+
+        # 初始化 plot_data
+        self.plot_data_file = os.path.join(self.target_out_dir, "plot_data")
+        with open(self.plot_data_file, "w") as f:
+            f.write("# unix_time, cycles_done, cur_path, paths_total, pending_total, pending_favs, map_size, unique_crashes, unique_hangs, max_depth, execs_per_sec\n")
+
+        # 初始化 fuzzer_stats
+        self.fuzzer_stats_file = os.path.join(self.target_out_dir, "fuzzer_stats")
+
         if not os.path.exists(self.out_dir):
             os.makedirs(self.out_dir)
 
@@ -38,7 +61,8 @@ class GreyBoxFuzzer:
 
         self.env = os.environ.copy()
         self.env["__AFL_SHM_ID"] = str(self.shm.id)
-
+        
+        self.unique_crashes = set()  # 新增：用于Crash去重
         self.global_visited_indices = set()
         self.total_execs = 0  # 新增：总执行次数用于计算速度
         self.start_time = time.time()
@@ -152,19 +176,78 @@ class GreyBoxFuzzer:
             energy += 20
         return energy
 
-    def save_crash(self, data, reason):
+    def save_crash(self, data, reason, bitmap_hash=None):
         """保存崩溃样本"""
-        crash_dir = os.path.join(self.out_dir, "crashes", self.target_name)
-        if not os.path.exists(crash_dir):
-            os.makedirs(crash_dir)
+        # === 去重逻辑 ===
+        if bitmap_hash:
+            if bitmap_hash in self.unique_crashes:
+                return
+            self.unique_crashes.add(bitmap_hash)
 
+        # 兼容旧逻辑：同时保存到 out/crashes/targetX (如果需要)
+        # 但主要保存到 out/targetX/crashes
+        
         timestamp = int(time.time())
-        filename = f"id_{self.total_execs}_{reason}_{timestamp}"
-        filepath = os.path.join(crash_dir, filename)
+        filename = f"id:{self.total_execs:06d},sig:{reason},src:000000,op:havoc,rep:1"
+        if bitmap_hash:
+             filename += f",hash:{bitmap_hash[:8]}"
+
+        filepath = os.path.join(self.crashes_dir, filename)
 
         with open(filepath, "wb") as f:
             f.write(data)
-        print(f"\n[!] 🚨 Found Crash! Saved to {filename}")
+        print(f"\n[!] 🚨 Found New Crash! Saved to {filename}")
+
+    def save_seed(self, data):
+        """保存感兴趣的种子到 queue"""
+        filename = f"id:{len(self.corpus):06d},src:000000,op:havoc,rep:1"
+        filepath = os.path.join(self.queue_dir, filename)
+        with open(filepath, "wb") as f:
+            f.write(data)
+            
+    def update_monitor(self, current_time, last_update_time):
+        """更新监控状态文件"""
+        elapsed = current_time - self.start_time
+        execs_per_sec = self.total_execs / elapsed if elapsed > 0 else 0
+        
+        # 1. 更新 fuzzer_stats
+        with open(self.fuzzer_stats_file, "w") as f:
+            f.write(f"start_time        : {int(self.start_time)}\n")
+            f.write(f"last_update       : {int(current_time)}\n")
+            f.write(f"fuzzer_pid        : {os.getpid()}\n")
+            f.write(f"cycles_done       : 0\n")
+            f.write(f"execs_done        : {self.total_execs}\n")
+            f.write(f"execs_per_sec     : {execs_per_sec:.2f}\n")
+            f.write(f"paths_total       : {len(self.corpus)}\n")
+            f.write(f"paths_favored     : {len(self.corpus)}\n")
+            f.write(f"paths_found       : {len(self.corpus)}\n")
+            f.write(f"paths_imported    : 0\n")
+            f.write(f"max_depth         : 0\n")
+            f.write(f"cur_path          : 0\n")
+            f.write(f"pending_favs      : 0\n")
+            f.write(f"pending_total     : 0\n")
+            f.write(f"variable_paths    : 0\n")
+            f.write(f"stability         : 100.00%\n")
+            f.write(f"bitmap_cvg        : 0.00%\n")
+            f.write(f"unique_crashes    : {len(self.unique_crashes)}\n")
+            f.write(f"unique_hangs      : 0\n")
+            f.write(f"last_path         : {int(last_update_time)}\n")
+            f.write(f"last_crash        : 0\n")
+            f.write(f"last_hang         : 0\n")
+            f.write(f"execs_since_crash : {self.total_execs}\n")
+            f.write(f"exec_timeout      : 0\n")
+            f.write(f"afl_banner        : {self.target_name}\n")
+            f.write(f"afl_version       : 4.07c\n")
+            f.write(f"target_mode       : default\n")
+            f.write(f"command_line      : {sys.argv[0]} {self.target_path}\n")
+
+        # 2. 追加 plot_data
+        # unix_time, cycles_done, cur_path, paths_total, pending_total, pending_favs, map_size, unique_crashes, unique_hangs, max_depth, execs_per_sec
+        with open(self.plot_data_file, "a") as f:
+            f.write(f"{int(current_time)}, 0, 0, {len(self.corpus)}, 0, 0, {len(self.global_visited_indices)}, {len(self.unique_crashes)}, 0, 0, {execs_per_sec:.2f}\n")
+
+        # 3. 打印控制台状态行
+        print(f"[*] Fuzzing test case #{self.total_execs} (stats: map={len(self.global_visited_indices)}, speed={execs_per_sec:.0f}/s, crashes={len(self.unique_crashes)}, paths={len(self.corpus)})")
 
     # === 核心运行逻辑 ===
     def start(self, timeout=86400):
@@ -233,6 +316,7 @@ class GreyBoxFuzzer:
                 else:
                     stdin_mode = subprocess.PIPE
 
+                bitmap = None # 初始化
                 try:
                     # 修复：stdout=subprocess.DEVNULL 屏蔽乱码
                     proc = subprocess.Popen(cmd_args, stdin=stdin_mode,
@@ -246,29 +330,47 @@ class GreyBoxFuzzer:
                         proc.communicate(timeout=0.1)
 
                     self.total_execs += 1
+                    
+                    # 立即读取 bitmap 计算 hash (用于去重)
+                    bitmap = self.shm.read(MAP_SIZE)
+                    bitmap_hash = hashlib.md5(bitmap).hexdigest()
 
                     # 修复：检查 Crash (returncode < 0 代表被信号杀死)
                     if proc.returncode < 0:
-                        self.save_crash(candidate, f"sig{-proc.returncode}")
+                        self.save_crash(candidate, f"sig{-proc.returncode}", bitmap_hash)
 
                 except subprocess.TimeoutExpired:
                     proc.kill()
-                    self.save_crash(candidate, "timeout")  # 保存超时用例
+                    # 超时也尝试读取 bitmap
+                    if bitmap is None:
+                        bitmap = self.shm.read(MAP_SIZE)
+                    
+                    # 对于超时，也计算 hash 尝试去重
+                    bitmap_hash = hashlib.md5(bitmap).hexdigest()
+                    self.save_crash(candidate, "timeout", bitmap_hash)  # 保存超时用例
                 except Exception as e:
                     pass
 
                 # 5. 覆盖率反馈
-                bitmap = self.shm.read(MAP_SIZE)
+                if bitmap is None:
+                     bitmap = self.shm.read(MAP_SIZE)
+                
                 current_indices = set(i for i, v in enumerate(bitmap) if v > 0)
 
                 if current_indices and not current_indices.issubset(self.global_visited_indices):
                     self.global_visited_indices.update(current_indices)
                     self.corpus.append(candidate)
-                    print(f"[+] New Path! Cov: {len(self.global_visited_indices)} | Execs: {self.total_execs}")
+                    self.save_seed(candidate)  # 新增：保存种子到 queue
+                    
+                    elapsed = time.time() - self.start_time
+                    speed = self.total_execs / elapsed if elapsed > 0 else 0
+                    print(f"[+] New Path! Cov: {len(self.global_visited_indices)} | Execs: {self.total_execs} | Speed: {speed:.2f} execs/s")
                     # 立即写入
                     with open(self.stats_file, "a") as f:
                         f.write(
                             f"{time.time() - self.start_time:.2f},{len(self.global_visited_indices)},{self.total_execs}\n")
+                    
+                    self.update_monitor(time.time(), time.time()) # 更新详细监控
                     last_log_time = time.time()
 
                 # 心跳日志
@@ -276,6 +378,8 @@ class GreyBoxFuzzer:
                     with open(self.stats_file, "a") as f:
                         f.write(
                             f"{time.time() - self.start_time:.2f},{len(self.global_visited_indices)},{self.total_execs}\n")
+                    
+                    self.update_monitor(time.time(), last_log_time) # 更新详细监控
                     last_log_time = time.time()
 
         # 清理
