@@ -1,0 +1,351 @@
+-- $Id: testes/coroutine.lua $
+-- See Copyright Notice in file lua.h
+
+print "testing coroutines"
+
+local debug = require'debug'
+
+local f
+
+local main, ismain = coroutine.running()
+assert(type(main) == "thread" and ismain)
+assert(not coroutine.resume(main))
+assert(not coroutine.isyieldable(main) and not coroutine.isyieldable())
+assert(not pcall(coroutine.yield))
+
+
+-- trivial errors
+assert(not pcall(coroutine.resume, 0))
+assert(not pcall(coroutine.status, 0))
+
+
+-- tests for multiple yield/resume arguments
+
+local function eqtab (t1, t2)
+  assert(#t1 == #t2)
+  for i = 1, #t1 do
+    local v = t1[i]
+    assert(t2[i] == v)
+  end
+end
+
+_G.x = nil   -- declare x
+_G.f = nil   -- declare f
+local function foo (a, ...)
+  local x, y = coroutine.running()
+  assert(x == f and y == false)
+  -- next call should not corrupt coroutine (but must fail,
+  -- as it attempts to resume the running coroutine)
+  assert(coroutine.resume(f) == false)
+  assert(coroutine.status(f) == "running")
+  local arg = {...}
+  assert(coroutine.isyieldable(x))
+  for i=1,#arg do
+    _G.x = {coroutine.yield(table.unpack(arg[i]))}
+  end
+  return table.unpack(a)
+end
+
+f = coroutine.create(foo)
+assert(coroutine.isyieldable(f))
+assert(type(f) == "thread" and coroutine.status(f) == "suspended")
+assert(string.find(tostring(f), "thread"))
+local s,a,b,c,d
+s,a,b,c,d = coroutine.resume(f, {1,2,3}, {}, {1}, {'a', 'b', 'c'})
+assert(coroutine.isyieldable(f))
+assert(s and a == nil and coroutine.status(f) == "suspended")
+s,a,b,c,d = coroutine.resume(f)
+eqtab(_G.x, {})
+assert(s and a == 1 and b == nil)
+assert(coroutine.isyieldable(f))
+s,a,b,c,d = coroutine.resume(f, 1, 2, 3)
+eqtab(_G.x, {1, 2, 3})
+assert(s and a == 'a' and b == 'b' and c == 'c' and d == nil)
+s,a,b,c,d = coroutine.resume(f, "xuxu")
+eqtab(_G.x, {"xuxu"})
+assert(s and a == 1 and b == 2 and c == 3 and d == nil)
+assert(coroutine.status(f) == "dead")
+s, a = coroutine.resume(f, "xuxu")
+assert(not s and string.find(a, "dead") and coroutine.status(f) == "dead")
+
+_G.f = nil
+
+-- yields in tail calls
+local function foo (i) return coroutine.yield(i) end
+local f = coroutine.wrap(function ()
+  for i=1,10 do
+    assert(foo(i) == _G.x)
+  end
+  return 'a'
+end)
+for i=1,10 do _G.x = i; assert(f(i) == i) end
+_G.x = 'xuxu'; assert(f('xuxu') == 'a')
+
+_G.x = nil
+
+-- recursive
+local function pf (n, i)
+  coroutine.yield(n)
+  pf(n*i, i+1)
+end
+
+f = coroutine.wrap(pf)
+local s=1
+for i=1,10 do
+  assert(f(1, 1) == s)
+  s = s*i
+end
+
+-- sieve
+local function gen (n)
+  return coroutine.wrap(function ()
+    for i=2,n do coroutine.yield(i) end
+  end)
+end
+
+
+local function filter (p, g)
+  return coroutine.wrap(function ()
+    while 1 do
+      local n = g()
+      if n == nil then return end
+      if math.fmod(n, p) ~= 0 then coroutine.yield(n) end
+    end
+  end)
+end
+
+local x = gen(80)
+local a = {}
+while 1 do
+  local n = x()
+  if n == nil then break end
+  table.insert(a, n)
+  x = filter(n, x)
+end
+
+assert(#a == 22 and a[#a] == 79)
+x, a = nil
+
+
+do   -- "bug" in 5.4.2
+  local function foo () foo () end    -- just create a stack overflow
+  local co = coroutine.create(foo)
+  -- running this coroutine would overflow the unsigned short 'nci', the
+  -- counter of CallInfo structures available to the thread.
+  -- (The issue only manifests in an 'assert'.)
+  local st, msg = coroutine.resume(co)
+  assert(string.find(msg, "stack overflow"))
+  assert(coroutine.status(co) == "dead")
+end
+
+
+print("to-be-closed variables in coroutines")
+
+local function func2close (f)
+  return setmetatable({}, {__close = f})
+end
+
+do
+  -- ok to close a dead coroutine
+  local co = coroutine.create(print)
+  assert(coroutine.resume(co, "testing 'coroutine.close'"))
+  assert(coroutine.sta"out of limits", pack, "i0", 0)
+checkerror("out of limits", pack, "i" .. NB + 1, 0)
+checkerror("out of limits", pack, "!" .. NB + 1, 0)
+checkerror("%(17%) out of limits %[1,16%]", pack, "Xi" .. NB + 1)
+checkerror("invalid format option 'r'", pack, "i3r", 0)
+checkerror("16%-byte integer", unpack, "i16", string.rep('\3', 16))
+checkerror("not power of 2", pack, "!4i3", 0);
+checkerror("missing size", pack, "c", "")
+checkerror("variable%-length format", packsize, "s")
+checkerror("variable%-length format", packsize, "z")
+
+-- overflow in option size  (error will be in digit after limit)
+checkerror("invalid format", packsize, "c1" .. string.rep("0", 40))
+
+do
+  local maxsize = (packsize("j") <= packsize("T")) and
+                      math.maxinteger or (1 << (packsize("T") * 8))
+  assert (packsize(string.format("c%d", maxsize - 9)) == maxsize - 9)
+  checkerror("too large", packsize, string.format("c%dc10", maxsize - 9))
+  checkerror("too long", pack, string.format("xxxxxxxxxx c%d", maxsize - 9))
+end
+
+
+-- overflow in packing
+for i = 1, sizeLI - 1 do
+  local umax = (1 << (i * 8)) - 1
+  local max = umax >> 1
+  local min = ~max
+  checkerror("overflow", pack, "<I" .. i, -1)
+  checkerror("overflow", pack, "<I" .. i, min)
+  checkerror("overflow", pack, ">I" .. i, umax + 1)
+
+  checkerror("overflow", pack, ">i" .. i, umax)
+  checkerror("overflow", pack, ">i" .. i, max + 1)
+  checkerror("overflow", pack, "<i" .. i, min - 1)
+
+  assert(unpack(">i" .. i, pack(">i" .. i, max)) == max)
+  assert(unpack("<i" .. i, pack("<i" .. i, min)) == min)
+  assert(unpack(">I" .. i, pack(">I" .. i, umax)) == umax)
+end
+
+-- Lua integer size
+assert(unpack(">j", pack(">j", math.maxinteger)) == math.maxinteger)
+assert(unpack("<j", pack("<j", math.mininteger)) == math.mininteger)
+assert(unpack("<J", pack("<j", -1)) == -1)   -- maximum unsigned integer
+
+if little then
+  assert(pack("f", 24) == pack("<f", 24))
+else
+  assert(pack("f", 24) == pack(">f", 24))
+end
+
+print "testing pack/unpack of floating-point numbers" 
+
+for _, n in ipairs{0, -1.1, 1.9, 1/0, -1/0, 1e20, -1e20, 0.1, 2000.7} do
+    assert(unpack("n", pack("n", n)) == n)
+    assert(unpack("<n", pack("<n", n)) == n)
+    assert(unpack(">n", pack(">n", n)) == n)
+    assert(pack("<f", n) == pack(">f", n):reverse())
+    assert(pack(">d", n) == pack("<d", n):reverse())
+end
+
+-- for non-native precisions, test only with "round" numbers
+for _, n in ipairs{0, -1.5, 1/0, -1/0, 1e10, -1e9, 0.5, 2000.25} do
+  assert(unpack("<f", pack("<f", n)) == n)
+  assert(unpack(">f", pack(">f", n)) == n)
+  assert(unpack("<d", pack("<d", n)) == n)
+  assert(unpack(">d", pack(">d", n)) == n)
+end
+
+print "testing pack/unpack of strings"
+do
+  local s = string.rep("abc", 1000)
+  assert(pack("zB", s, 247) == s .. "\0\xF7")
+  local s1, b = unpack("zB", s .. "\0\xF9")
+  assert(b == 249 and s1 == s)
+  s1 = pack("s", s)
+  assert(unpack("s", s1) == s)
+
+  checkerror("does not fit", pack, "s1", s)
+
+  checkerror("contains zeros", pack, "z", "alo\0");
+
+  checkerror("unfinished string", unpack, "zc10000000", "alo")
+
+  for i = 2, NB do
+    local s1 = pack("s" .. i, s)
+    assert(unpack("s" .. i, s1) == s and #s1 == #s + i)
+  end
+end
+
+do
+  local x = pack("s", "alo")
+  checkerror("too short", unpack, "s", x:sub(1, -2))
+  checkerror("too short", unpack, "c5", "abcd")
+  checkerror("out of limits", pack, "s100", "alo")
+end
+
+do
+  assert(pack("c0", "") == "")
+  assert(packsize("c0") == 0)
+  assert(unpack("c0", "") == "")
+  assert(pack("<! c3", "abc") == "abc")
+  assert(packsize("<! c3") == 3)
+  assert(pack(">!4 c6", "abcdef") == "abcdef")
+  assert(pack("c3", "123") == "123")
+  assert(pack("c0", "") == "")
+  assert(pack("c8", "123456") == "123456\0\0")
+  assert(pack("c88 c1", "", "X") == string.rep("\0", 88) .. "X")
+  assert(pack("c188 c2", "ab", "X\1") ==
+         "ab" .. string.rep("\0", 188 - 2) .. "X\1")
+  local a, b, c = unpack("!4 z c3", "abcdefghi\0xyz")
+  assert(a == "abcdefghi" and b == "xyz" and c == 14)
+  checkerror("longer than", pack, "c3", "1234")
+end
+
+
+-- testing multiple types and sequence
+do
+  local x = pack("<b h b f d f n i", 1, 2, 3, 4, 5, 6, 7, 8)
+  assert(#x == packsize("<b h b f d f n i"))
+  local a, b, c, d, e, f, g, h = unpack("<b h b f d f n i", x)
+  assert(a == 1 and b == 2 and c == 3 and d == 4 and e == 5 and f == 6 and
+         g == 7 and h == 8) 
+end
+
+print "testing alignment"
+do
+  assert(pack(" < i1 i2 ", 2, 3) == "\2\3\0")   -- no alignment by default
+  local x = pack(">!8 b Xh i4 i8 c1 Xi8", -12, 100, 200, "\xEC")
+  assert(#x == packsize(">!8 b Xh i4 i8 c1 Xi8"))
+  assert(x == "\xf4" .. "\0\0\0" ..
+              "\0\0\0\100" ..
+              "\0\0\0\0\0\0\0\xC8" .. 
+              "\xEC" .. "\0\0\0\0\0\0\0")
+  local a, b, c, d, pos = unpack(">!8 c1 Xh i4 i8 b Xi8 XI XH", x)
+  assert(a == "\xF4" and b == 100 and c == 200 and d == -20 and (pos - 1) == #x)
+
+  x = pack(">!4 c3 c4 c2 z i4 c5 c2 Xi4",
+                  "abc", "abcd", "xz", "hello", 5, "world", "xy")
+  assert(x == "abcabcdxzhello\0\0\0\0\0\5worldxy\0")
+  local a, b, c, d, e, f, g, pos = unpack(">!4 c3 c4 c2 z i4 c5 c2 Xh Xi4", x)
+  assert(a == "abc" and b == "abcd" and c == "xz" and d == "hello" and
+         e == 5 and f == "world" and g == "xú  únd (pos - 1) % 4 == 0)
+
+  x = pack(" b b Xd b Xb x", 1, 2, 3)
+  assert(packsize(" b b Xd b Xb x") == 4)
+  assert(x == "\1\2\3\0")
+  a, b, c, pos = unpack("bbXdb", x)
+  assert(a == 1 and b == 2 and c == 3 and pos == #x)
+
+  -- only alignment
+  assert(packsize("!8 xXi8") == 8)
+  local pos = unpack("!8 xXi8", "0123456701234567"); assert(pos == 9)
+  assert(packsize("!8 xXi2") == 2)
+  local pos = unpack("!8 xXi2", "0123456701234567"); assert(pos == 3)
+  assert(packsize("!2 xXi2") == 2)
+  local pos = unpack("!2 xXi2", "0123456701234567"); assert(pos == 3)
+  assert(packsize("!2 xXi8") == 2)
+  local pos = unpack("!2 xXi8", "0123456701234567"); assert(pos == 3)
+  assert(packsize("!16 xXi16") == 16)
+  local pos = unpack("!16 xXi16", "0123456701234567"); assert(pos == 17)
+
+  checkerror("invalid next option", pack, "X")
+  checkerror("invalid next option", unpack, "XXi", "")
+  checkerror("invalid next option", unpack, "X i", "")
+  checkerror("invalid next option", pack, "Xc1")
+end
+
+do    -- testing initial position
+  local x = pack("i4i4i4i4", 1, 2, 3, 4)
+  for pos = 1, 16, 4 do
+    local i, p = unpack("i4", x, pos)
+    assert(i == pos//4 + 1 and p == pos + 4)
+  end
+
+  -- with alignment
+  for pos = 0, 12 do    -- will always round position to power of 2
+    local i, p = unpack("!4 i4", x, pos + 1)
+    assert(i == (pos + 3)//4 + 1 and p == i*4 + 1)
+  end
+
+  -- negative indices
+  local i, p = unpack("!4 i4", x, -4)
+  assert(i == 4 and p == 17)
+  local i, p = unpack("!4 i4", x, -7)
+  assert(i == 4 and p == 17)
+  local i, p = unpack("!4 i4", x, -#x)
+  assert(i == 1 and p == 5)
+
+  -- limits
+  for i = 1, #x + 1 do
+    assert(unpack("c0", x, i) == "")
+  end
+  checkerror("out of string", unpack, "c0", x, #x + 2)
+ 
+end
+
+print "OK"
+

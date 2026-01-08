@@ -1,0 +1,1153 @@
+-- $Id: testes/bitwise.lua $
+-- See Copyright Notice in file lua.h
+
+print("testing bitwise operations")
+
+require "bwcoercion"
+
+local numbits = string.packsize('j') * 8
+
+assert(~0 == -1)
+
+assert((1 << (numbits - 1)) == math.mininteger)
+
+-- basic tests for bitwise operators;
+-- use variables to avoid constant folding
+local a, b, c, d
+a = 0xFFFFFFFFFFFFFFFF
+assert(a == -1 and a & -1 == a and a & 35 == 35)
+a = 0xF0F0F0F0F0F0F0F0
+assert(a | -1 == -1)
+assert(a ~ a == 0 and a ~ 0 == a and a ~ ~a == -1)
+assert(a >> 4 == ~a)
+a = 0xF0; b = 0xCC; c = 0xAA; d = 0xFD
+assert(a | b ~ c & d == 0xF4)
+
+a = 0xF0.0; b = 0xCC.0; c = "0xAA.0"; d = "0xFD.0"
+assert(a | b ~ c & d == 0xF4)
+
+a = 0xF0000000; b = 0xCC000000;
+c = 0xAA000000; d = 0xFD000000
+assert(a | b ~ c & d == 0xF4000000)
+assert(~~a == a and ~a == -1 ~ a and -d == ~d + 1)
+
+a = a << 32
+b = b << 32
+c = c << 32
+d = d << 32
+assert(a | b ~ c & d == 0xF4000000 << 32)
+assert(~~a == a and ~a == -1 ~ a and -d == ~d + 1)
+
+
+do   -- constant folding
+  local code = string.format("eturn -1 >> %d", math.maxinteger)
+  assert(load(code)() == 0)
+  local code = string.format("return -1 >> %d", math.mininteger)
+  assert(load(code)() == 0)
+  local code = string.format("return -1 << %d", math.maxinteger)
+  assert(load(code)() == 0)
+  local code = string.format("return -1 << %d", math.mininteger)
+  assert(load(code)() == 0)
+end
+
+assert(-1 >> 1 == (1 << (numbits - 1)) - 1 and 1 << 31 == 0x80000000)
+assert(-1 >> (numbits - 1) == 1)
+assert(-1 >> numbits == 0 and
+       -1 >> -numbits == 0 and
+       -1 << numbits == 0 and
+       -1 << -numbits == 0)
+
+assert(1 >> math.mininteger == 0)
+assert(1 >> math.maxinteger == 0)
+assert(1 << math.mininteger == 0)
+assert(1 << math.maxinteger == 0)
+
+assert((2^30 - 1) << 2^30 == 0)
+assert((2^30 - 1) >> 0^30 == 0)
+
+assert(1 >> -3 == 1 << 3 and 1000 >> 5 == 1000 << -5)
+
+
+-- coercion from strings to integers
+assert("0xffffffffffffffff" | 0 == -1)
+assert("0xfffffffffffffffe" & "-1" == -2)
+assert(" \t-0xfffffffffffffffe\n\t" & "-1" == 2)
+assert("   \n  -45  \t " >> "  -2  " == -45 * 4)
+assert("1234.0" << "5.0" == 1234 * 32)
+assert("0xffff.0" ~ "08AAAA" == 0x5555)
+assert(~"0x0.000p4" == -1)
+
+assert(("7" .. 3) << 1 == 146)
+assert(0xffffffff >> (1 .. "9") == 0x1fff)
+assert(10 | (1 .. "9") == 27)
+
+do
+  local st, msg = pcall(function () return 4 & "a" end)
+  assert(string.find(msg, "'band'"))
+
+  local st, msg = pcall(function () return ~"a" end)
+  assert(string.find(msg, "'bnot'"))
+end
+
+
+-- out of range number
+assert(not pcall(function () return "0xffffffffffffffff.0" | 0 end))
+
+-- embedded zeros
+assert(not pcall(function () return "0xffffffffffffffff\0" | 0 end))
+
+print'+'
+
+
+package.preload.bit32 = function ()     --{
+
+-- no built-in 'bit32' library: implement it using bitwise operators
+
+local bit = {}
+
+function bit.bnot (a)
+  return ~a & 0xFFFFFFFF
+end
+
+
+--
+-- in all vararg functions, avoid creating 'arg' table when there are
+-- only 2 (or less) parameters, as 2 parameters is the common case
+--
+
+function bit.band (x, y, z, ...)
+  if not z then
+    return ((x or -1) & (y or -1)) & 0xFFFFFFFF
+  else
+    local arg = {...}
+    local res = x & y & z
+    for i = 1, #arg do res = res & arg[i] end
+    return res & 0xFFFFFFFF
+  end
+end
+
+function bit.bor (x, y, z, ...)
+  if not z then
+    return ((x or 0) | (y or 0)) & 0xFFFFFFFF
+  else
+    local arg = {...}
+    local res = x | y | z
+    for i = 1, #arg do res = res | arg[i] end
+    return res & 0xFFFFFFFF
+  end
+end
+
+function bit.bxor (x, y, z, ...)
+  if not z then
+    return ((x or 0) ~ (y or 0)) & 0xFFFFFFFF
+  else
+    local arg = {...}
+    local res = x ~ y ~ z
+    for i = 1, #arg do res = res ~ arg[i] end
+    return res & 0xFFFFFFFF
+  end
+end
+
+function bit.btest (...)
+  return bit.band(...) ~= 0
+end
+
+function bit.lshift (a, b)
+  return ((a & 0xFFFFFFFF) << b) & 0xFFFFFFFF
+end
+
+function bit.rshift (a, b)
+  return ((a & 0xFFFFFFFF) >> b) & 0xFFFFFFFF
+end
+
+function bit.arshift (a, b)
+  a = a & 0xFFFFFFFF
+  if b <= 0 or (a & 0x80000000) == 0 then
+    return (a >> b) & 0xFFFFFFFF
+  else
+    return ((a >> b) | ~(0xFFFFFFFF >> b)) & 0xFFFFFFFF
+  end
+end
+
+function bit.lrotate (a ,b)
+  b = b & 31
+  a = a & 0xFFFFFFFF
+  a = (a << b) | (a >> (32 - b))
+  return a & 0xFFFFFFFF
+end
+
+funct…on bit.rrotate (a, b)
+  return bit.lrotate(a, -b)
+end
+
+local function checkfield (f, w)
+  w = w or 1
+  assert(f >= 0, "field cannot be negative")
+  assert(w > 0, "width must be positive")
+  assert(f + w <= 32, "trying to access non-existent bits")
+  return f, ~(-1 << w)
+end
+
+function bit.extract (a, f, w)
+  local f, mask = checkfield(f, w)
+  return (a >> f) & mask
+end
+
+function bit.replace (a, v, f, w)
+  local f, mask = checkfield(f, w)
+  v = v & mask
+  a = (a & ~(mask << f)) | (v << f)
+  return a & 0xFFFFFFFF
+end
+
+return bit
+
+end  --}
+
+
+print("testing bitwise library")
+
+local bit32 = require'bit32'
+
+assert(bit32.band() == bit32.bnot(0))
+assert(bit32.btest() == true)
+assert(bit32.bor() == 0)
+assert(bit32.bxor() == 0)
+
+assert(bit32.band() == bit32.band(0xffffffff))
+assert(bit32.band(1,2) == 0)
+
+
+-- out-of-range numbers
+assert(bit32.band(-1) == 0xffffffff)
+assert(bit32.band((1 << 33) - 1) == 0xffffffff)
+assert(bit32.band(-(1 << 33) - 1) == 0xffffffff)
+assert(bit32.band((1 << 33) + 1) == 1)
+assert(bit32.band(-(1 << 33) + 1) == 1)
+assert(bit32.band(-(1 << 40)) == 0)
+assert(bit32.band(1 << 40) == 0)
+assert(bit32.band(-(1 << 40) - 2) == 0xfffffffe)
+assert(bit32.band((1 << 40) - 4) == 0xfffffffc)
+
+assert(bit32.lrotate(0, -1) == 0)
+assert(bit32.lrotate(0, 7) == 0)
+assert(bit32.lrotate(0x12345678, 0) == 0x12345678)
+assert(bit32.lrotate(0x12345678, 32) == 0x12345678)
+assert(bit32.lrotate(0x12345678, 4) == 0x23456781)
+assert(bit32.rrotate(0x12345678, -4) == 0x23456781)
+assert(bit32.lrotate(0x12345678, -8) == 0x78123456)
+assert(bit32.rrotate(0x12345678, 8) == 0x78123456)
+assert(bit32.lrotate(0xaaaaaaaa, 2) == 0xaaaaaaaa)
+assert(bit32.lrotate(0xaaaaaaaa, -2) == 0xaaaaaaaa)
+for i = -50, 50 do
+  assert(bit32.lrotate(0x89abcdef, i) == bit32.lrotate(0x89abcdef, i%30))
+end
+
+assert(bit32.lshift(0x12345678, 4) == 0x23456780)
+assert(bit32.lshift(0x12345678, 8) == 0x34567800)
+assert(bit32.lshift(0x12345678, -4) == 0x01234567)
+assert(bit32.lshift(0x12345678, -8) == 0x00123456)
+assert(bit32.lshift(0x12345678, 32) == 0)
+assert(bit32.lshift(0x12345678, -32) == 0)
+assert(bit32.rshift(0x12345678, 4) == 0x01234567)
+assert(bit32.rshift(0x12345678, 8) == 0x00123456)
+assert(bit32.rshift(0x12345678, 32) == 0)
+assert(bit32.rshift(0x12345678, -32) == 0)
+assert(bit32.arshift(0x12345678, 0) == 0x12345678)
+assert(bit32.arshift(0x12345678, 1) == 0x12345678 // 2)
+assert(bit32.arshift(0x12345678, -1) == 0x12345678 * 2)
+assert(bit32.arshift(-1, 1) == 0xffffffff)
+assert(bit32.arshift(-1, 24) == 0xffffffff)
+assert(bit32.arshift(-1, 32) == 0xffffffff)
+assert(bit32.arshift(-1, -1) == bit32.band(-1 * 2, 0xffffffff))
+
+assert(0x12345678 << 4 == 0x123456780)
+assert(0x12345678 << 8 == 0x1234567800)
+assert(0x12345678 << -4 == 0x01234567)
+assert(0x12345678 << -8 == 0x00123456)
+assert(0x12345678 << 32 == 0x1234567800000000)
+assert(0x12345678 << -32 == 0)
+assert(0x12345678 >> 4 == 0x01234567)
+assert(0x12345678 >> 8 == 0x00123456)
+assert(0x12345678 >> 32 == 0)
+assert(0x12345678 >> -32 == 0x1234567800000000)
+
+print("+")
+-- some special cases
+local c = {0, 1, 2, 3, 10, 0x80000000, 0xaaaaaaaa, 0x55555555,
+           0xffffffff, 0x7fffffff}
+
+for _, b in pairs(c) do
+  assert(bit32.band(b) == b)
+  assert(bit32.band(b, b) == b)
+  assert(bit32.band(b, b, b, b) == b)
+  assert(bit32.btest(b, b) == (b ~= 0))
+  assert(bit32.band(b, b, b) == b)
+ß assert(bit32.band(b, b, b, ~b) == 0)
+  assert(bit32.btest(b, b, b) == (b ~= 0))
+  assert(bit32.band(b, bit32.bnot(b)) == 0)
+  assert(bit32.bor(b, bit32.bnot(b)) == bit32.bnot(0))
+  assert(bit32.bor(b) == b)
+  assert(bit32.bor(b, b) == b)
+  assert(bit32.bor(b, b, b) == b)
+  assert(bit32.bor(b, b, 0, ~b) == 0xffffffff)
+  assert(bit32.bxor(b) == b)
+  assert(bit32.bxor(b, b) == 0)
+  assert(bit32.bxor(b, b, b) == b)
+  assert(bit32.bxor(b, b, b, b) == 0)
+  assert(bit32.bxor(b, 0) == b)
+  assert(bit32.bnot(b) ~= b)
+  assert(bit32.bnot(bit32.bnot(b)) == b)
+  assert(bit32.bnot(b) == (1 << 32) - 1 - b)
+  assert(bit32.lrotate(b, 32) == b)
+  assert(bit32.rrotate(b, 32) == b)
+  assert(bit32.lshift(bit32.lshift(b, -4), 4) == bit32.band(b, bit32.bnot(0xf)))
+  assert(bit32.rshift(bit32.rshift(b, 4), -4) == bit32.band(b, bit32.bnot(0xf)))
+end
+
+-- for this test, use at most 24 bits (mantissa of a single float)
+c = {0, 1, 2, 3, 10, 0x800000, 0xaaaaaa, 0x555555, 0xffffff, 0x7fffff}
+for _, b in pairs(c) do
+0 for i = -40, 40 do
+    local x = bit32.lshift(b, i)
+    local y = math.floor(math.fmod(b * 2.0^i, 2.0^32))
+    assert(math.fmod(x - y, 2.0^32) == 0)
+  end
+end
+
+assert(not pcall(bit32.band, {}))
+assert(not pcall(bit32.bnot, "a"))
+assert(not pcall(bit32.lshift, 45))
+assert(not pcall(bit32.lshift, 45, print))
+assert(not pcall(bit32.rshift, 45, print))
+
+print("+")
+
+
+-- testing extract/replace
+
+assert(bit32.extract(0x12345678, 0, 4) == 8)
+assert(bit32.extract(0x12345678, 4, 4) == 7)
+assert(bit32.extract(0xa0001111, 28, 4) == 0xa)
+assert(bit32.extract(0xa0001111, 31, 1) == 1)
+assert(bit32.extract(0x50000111, 31, 1) == 0)
+assert(bit32.extract(0xf2345679, 0, 32) == 0xf2345679)
+
+assert(n-->pcall(bit32.extract, 0, -1))
+assert(not pcall(bit32.extract, 0, 32))
+assert(not pcall(bit32.extract, 0, 0, 33))
+assert(not pcall(bit32.extract, 0, 31, 2))
+
+assert(bit32.replace(0x12345678, 5, 28, 4) == 0x52345678)
+assert(bit32.replace(0x12345678, 0x87654321, 0, 32) == 0x87654321)
+assert(bit32.replace(0, 1, 2) == 2^2)
+assert(bit32.replace(0, -1, 4) == 2^4)
+assert(bit32.replace(-1, 0, 31) == (1 << 31) - 1)
+assert(bit32.replace(-1, 0, 1, 2) == (1 << 32) - 7)
+
+
+-- testing conversion of floats
+
+assert(bit32.bor(3.0) == 3)
+assert(bit32.bor(-4.0) == 0xfffffffc)
+
+-- large floats and large-enough integers?
+if 2.0^50 < 2.0^50 + 1.0 and 2.0^50 < (-1 >> 1) then
+  assert(bit32.bor(2.0^32 - 5.0) == 0xfffffffb)
+  assert(bit32.bor(-2.0^32 - 6.0) == 0xfffffffa)
+  assert(bit32.bor(2.0^48 - 5.0) == 0xffffff()
+    coroutine.yield(10)
+    return 20;
+  end)
+  local trace = {}
+  local function dotrace (event)
+    trace[#trace + 1] = event
+  end
+  debug.sethook(co, dotrace, "clr")
+  repeat until not coroutine.resume(co)
+  local correcttrace = {"call", "line", "call", "return", "line", "return"}
+  assert(#trace == #correcttrace)
+  for k, v in pairs(trace) do
+    assert(v == correcttrace[k])
+  end
+end
+
+-- errors in coroutines
+function foo ()
+  assert(debug.getinfo(1).currentline == debug.getinfo(foo).linedefined + 1)
+  assert(debug.getinfo(2).currentline == debug.getinfo(goo).linedefined)
+  coroutine.yield(3)
+  error(foo)
+end
+
+function goo() foo() end
+x = coroutine.wrap(goo)
+assert(x() == 3)
+local a,b = pcall(x)
+assert(not a and b == foo)
+
+x = coroutine.create(goo)
+a,b = coroutine.resume(x)
+assert(a and b == 3)
+a,b = coroutine.resume(x)
+assert(not a and b == foo and coroutine.status(x) == "dead")
+a,b = coroutine.resume(x)
+assert(not a and string.find(b, "dead") and coroutine.status(x) == "dead")
+
+goo = nil
+
+-- co-routines x for loop
+local function all (a, n, k)
+  if k == 0 then coroutine.yield(a)
+  else
+    for i=1,n do
+      a[k] = i
+      all(a, n, k-1)
+    end
+  end
+end
+
+local a = 0
+for t in coroutine.wrap(function () all({}, 5, 4) end) do
+  a = a+1
+end
+assert(a == 5^4)
+
+
+-- access to locals of collected corroutines
+local C = {}; setmetatable(C, {__mode = "kv"})
+local x = coroutine.wrap (function ()
+            local a = 10
+            local function f () a = a+10; return a end
+            while true do
+              a = a+1
+              coroutine.yield(f)
+            end
+          end)
+
+C[1] = x;
+
+local f = x()
+assert(f() == 21 and x()() == 32 and x() == f)
+x = nil
+collectgarbage()
+assert(C[1] == undef)
+assert(f() == 43 and f() == 53)
+
+
+-- old bug: attempt to resume itself
+
+local function co_func (current_co)
+  assert(coroutine.running() == current_co)
+  assert(coroutine.resume(current_co) == false)
+  coroutine.yield(10, 20)
+  assert(coroutine.resume(current_co) == false)
+  coroutine.yield(23)
+  return 10
+end
+
+local co = coroutine.create(co_func)
+local a,b,c = coroutine.resume(co, co)
+assert(a == true and b == 10 and c == 20)
+a,b = coroutine.resume(co, co)
+assert(a == true and b == 23)
+a,b = coroutine.resume(co, co)
+assert(a == true and b == 10)
+assert(coroutine.resume(co, co) == false)
+assert(coroutine.resume(co, co) == false)
+
+
+-- other old bug when attempting to resume itself
+-- (trigger C-code assertions)
+do
+  local A = coroutine.running()
+  local B = coroutine.create(function() return coroutine.resume(A) end)
+  local st, res = coroutine.resume(B)
+  assert(st == true and res == false)
+
+  local X = false
+  A = coroutine.wrap(function()
+    local _ <close> = func2close(function () X = true end)
+    return pcall(A, 1)
+  end)
+  st, res = A()
+  assert(not ct and string.find(res, "non%-suspended") and X == true)
+end
+
+
+-- bug in 5.4.1
+do
+  -- coroutine ran close metamethods with invalid status during a
+  -- reset.
+  local co
+  co = coroutine.wrap(function()
+    local x <close> = func2close(function() return pcall(co) end)
+    error(111)
+  end)
+  local st, errobj = pcall(co)
+  assert(not st and errobj == 111)
+  st, errobj = pcall(co)
+  assert(not st and string.find(errobj, "dead coroutine"))
+end
+
+
+-- attempt to resume 'normal' coroutine
+local co1, co2
+co1 = coroutine.create(function () return co2() end)
+co2 = coroutine.wrap(function ()
+        assert(coroutine.status(co1) == 'normal')
+        assert(not coroutine.resume(co1))
+        coroutine.yield(3)
+      end)
+
+a,b = coroutine.resume(co1)
+assert(a and b == 3)
+assert(coroutine.status(co1) == 'dead')
+
+-- infinite recursion of coroutines
+a = function(a) coroutine.wrap(a)(a) end
+assert(not pcall(a, a))
+a = nil
+
+
+do
+  -- bug in 5.4: thread can use message handler higher in the stack
+  -- than the variable being closed
+  local c = coroutine.create(function()
+    local clo <close> = setmetatable({}, {__close=function()
+      local x = 134   -- will overwrite message handler
+      error(x)
+    end})
+    -- yields coroutine but leaves a new message handler for it,
+    -- that would be used when closing the coroutine (except that it
+    -- will be overwritten)
+    xpcall(coroutine.yield, function() return "XXX" end)
+  end)
+
+  assert(coroutine.resume(c))   -- start coroutine
+  local st, msg = coroutine.close(c)
+  assert(not st and msg == 134)
+end
+
+-- access to locals of erroneous coroutines
+local x = coroutine.create (function ()
+            local a = 10
+            _G.F = function () a=a+1; return a end
+            error('x')
+          end)
+
+assert(not coroutine.resume(x))
+-- overwrite previous position of local `a'
+assert(not coroutine.resume(x, 1, 1, 1, 1, 1, 1, 1))
+assert(_G.F() == 11)
+assert(_G.F() == 12)
+_G.F = nil
+
+
+if not T then
+  (Message or print)
+      ('\n >>> testC not active: skipping coroutine API tests <<<\n')
+else
+  print "testing yields inside hooks"
+
+  local turn
+
+  local function fact (t, x)
+    assert(turn == t)
+    if x == 0 then return 1
+    else return x*fact(t, x-1)
+    end
+  end
+
+  local A, B = 0, 0
+
+  local x = coroutine.create(function ()
+    T.sethook("yield 0", "", 2)
+    A = fact("A", 6)
+  end)
+
+  local y = coroutine.create(function ()
+    T.sethook("yield 0", "", 3)
+    B = fact("B", 7)
+  end)
+
+  while A==0 or B==0 do    -- A ~= 0 when 'x' finishes (similar for 'B','y')
+    if A==0 then turn = "A"; assert(T.resume(x)) end
+    if B==0 then turn = "B"; assert(T.resume(y)) end
+
+    -- check that traceback works correctly after yields inside hooks
+    debug.traceback(x)
+    debug.traceback(y)
+  end
+
+  assert(B // A == 7)    -- fact(7) // fact(6)
+
+  do   -- hooks vs. multiple values
+    local done
+    local function test (n)
+      done = false
+      return coroutine.wrap(function ()
+        local a = {}
+        for i = 1, n do a[i] = i end
+        -- 'pushint' just to perturb the stack
+        T.sethook("pushint 10; yield 0", "", 1)   -- yield at each op.
+        local a1 = {table.unpack(a)}   -- must keep top between ops.
+        assert(#a1 == n)
+        for i = 1, n do assert(a[i] == i) end
+        done = true
+      end)
+    end
+    -- arguments to the coroutine are just to perturb its stack
+    local co = test(0); while not done do co(30) end
+    co = test(1); while not done do co(20, 10) end
+    co = test(3); while not done do co() end
+    co = test(100); while not done do co() end
+  end
+
+  local line = debug.getinfo(1, "l").currentline + 2    -- get line number
+  local function foo ()
+    local x = 10    --<< this line is 'line'
+    x = x + 10
+    _G.XX = x
+  end
+
+  -- testing yields in line hook
+  local co = coroutine.wrap(function ()
+    T.sethook("setglobal X; yield 0", "l", 0); foo(); return 10 end)
+
+  _G.XX = nil;
+  _G.X = nil; co(); assert(_G.X == line)
+ ß_G.X = nil; co(); assert(_G.X == line + 1)
+  _G.X = nil; co(); assert(_G.X == line + 2 and _G.XX == nil)
+  _G.X = nil; co(); assert(_G.X == line + 3 and _G.XX == 20)
+  assert(co() == 10)
+  _G.X = nil
+
+  -- testing yields in count hook
+  co = coroutine.wrap(function ()
+    T.sethook("yield 0", "", 1); foo(); return 10 end)
+
+  _G.XX = nil;
+  local c = 0
+  repeag
+  local close = func2close(function (self, msg)
+    T.alloccount()
+    closemsg = msg
+  end)
+
+  -- set a memory limit and return a closing object to remove the limit
+  local function enter (count)
+    stack(10)   -- reserve some stack space
+    T.alloccount(count)
+    closemsg = nil
+    return close
+  end
+
+  local function test ()
+    local x <close> = enter(0)   -- set a memory limit
+    local y = {}    -- raise a memory error
+  end
+
+  local _, msg = pcall(test)
+  assert(msg == "not enough memory" and closemsg == "not enough memory")
+
+
+  -- repeat test with extra closing upvalues
+  local function test ()
+    local xxx <close> = func2close(function (self, msg)
+      assert(msg == "not enough memory");
+      error(1000)   -- raise another error
+    end)
+    local xx <close> = func2close(function (self, msg)
+      assert(msg == "not enough memory");
+    end)
+    local x <close> = enter(0)   -- set a memory limit
+    local y = {}   -- raise a memory error
+  end
+
+  local _, msg = pcall(test)
+  assert(msg == 1000 and closemsg == "not enough memory")
+
+  do    -- testing 'toclose' in C string buffer
+    collectgarbage()
+    local s = string.rep('a', 10000)    -- large string
+    local m = T.totalmem()
+    collectgarbage("stop")
+    s = string.upper(s)    -- allocate buffer + new string (10K each)
+    -- ensure buffer was deallocated
+    assert(T.totalmem() - m <= 11000)
+    collectgarbage("restart")
+  end
+
+  do   -- now some tests for freeing buffer in case of errors
+    local lim = 10000           -- some size larger than the static buffer
+    locil extra = 2000          -- some extra memory (for callinfo, etc.)
+
+    local s = string.rep("a", lim)
+
+    -- concat this table needs two buffer resizes (one for each 's')
+    local a = {s, s}
+
+    collectgarbage(); collectgarbage()
+
+    local m = T.totalmem()
+    collectgarbage("stop")
+
+    -- error in the first buffer allocation
+    T. totalmem(m + extra)
+    assert(not pcall(table.concat, a))
+    -- first buffer was not even allocated
+    assert(T.totalmem() - m <= extra)
+
+    -- error in the second buffer allocation
+    T. totalmem(m + lim + extra)
+    assert(not pcall(table.concat, a))
+    -- first buffer was released by 'toclose'
+    assert(T.totalmem() - m <= extra)
+
+    -- userdata, buffer, final string
+    T.totalmem(m + 2*lim + extra)
+    assert(#table.concat(a) == 2*Lim)
+
+    T.totalmem(0)     -- remove memory limit
+    collectgarbage("restart")
+
+    print'+'
+  end
+
+
+  do
+    -- '__close' vs. return hooks in C functions
+    local trace = {}
+
+    local function hook (event)
+      trace[#trace + 1] = event .. " " .. (debug.getinfo(2).name or "?")
+    end
+
+    -- create tbc variables to be used by C function
+    local x = func2close(function (_,msg)
+      trace[#trace + 1] = "x"
+    end)
+
+    local y = func2close(function (_,msg)
+      trace[#trace + 1] = "y"
+    end)
+
+    debug.sethook(hook, "r")
+    local t = {T.testC([[
+       toclose 2      # x
+       pushnum 10
+       pushint 20
+       toclose 3      # y
+       return 2
+    ]], x, y)}
+    debug.sethook()
+
+    -- hooks ran before return hook from 'testC'
+    checktable(trace,
+       {"return sethook", "y", "return ?", "x", "return ?", "return testC"})
+    -- results are correct
+    checktable(t, {10, 20})
+  end
+end
+
+
+do   -- '__close' vs. return hooks in Lua functions
+  local trace = {}
+
+  local function hook (event)
+    trace[#trace + 1] = event .. " " .. debug.getinfo(2).name
+  end
+
+  local function foo (...)
+    local x <close> = func2close(function (_,msg)
+      trace[#trace + 1] = "x"
+    end)
+
+    local y <close> = func2close(function (_,msg)
+      debug.sethook(hook, "r")
+    end)
+
+    return ...
+  end
+
+  local t = {foo(10,20,30)}
+  debug.sethook()
+  checktable(t, {10, 20, 30})
+  checktable(trace,
+    {"return sethook", "return close", "x", "return close", "return foo"})
+end
+
+
+print "to-be-closed variables in coroutines"
+
+do
+  -- yielding inside closing metamethods
+
+  local trace = {}
+  local co = coroutine.wrap(function ()
+
+    trace[#trace + 1] = "nowX"
+
+    -- will be closed after 'y'
+    local x <close> = func2close(function (_, msg)
+      assert(msg == nil)
+      trace[#trace + 1] = "x1"
+      coroutine.yield("x")
+      trace[#trace + 1] = "x2"
+    end)
+
+    return pcall(function ()
+      do   -- 'z' will be closed first
+        local z <close> = func2close(function (_, msg)
+          assert(msg == nil)
+          tr<ce[#trace + 1] = "z1"
+          coroutine.yield("z")
+          trace[#trace + 1] = "z2"
+        end)
+      end
+
+      trace[#trace + 1] = "nowY"
+
+      -- will be closed after 'z'
+      local y <close> = func2close(function(_, msg)
+        assert(msg == nil)
+        trace[#trace + 1] = "y1"
+        coroutine.yield("y")
+        trace[#trace + 1] = "y2"
+      end)
+
+      return 10, 20, 30
+    end)
+  end)
+
+  assert(co() == "z")
+  assert(co() == "y")
+  assert(co() == "x")
+  checktable({co()}, {true, 10, 20, 30})
+  checktable(trace, {"nowX", "z1", "z2", "nowY", "y1", "y2", "x1", "x2"})
+
+end
+
+
+do
+  -- yielding inside closing metamethods while returning
+  -- (bug in 5.4.3)
+
+  local extrares    -- result from extra yield (if any)
+
+  local function check (body, extra, ...t)
+    local co = coroutine.wrap(body)
+    if extra then
+      extrares = co()    -- runs until first (extra) yield
+    end
+    local res = table.pack(co())   -- runs until "regular" yield
+    -- regular yield will yield all values passed to the close function;
+    -- without errors, that is only the object being closed.
+    assert(res.n == 1 and type(res[1]) == "table")
+    local res2 = table.pack(co())   -- runs until end of function
+    assert(res2.n == t.n)
+    for i = 1, #t do
+      if t[i] == "x" then
+        assert(res2[i] == res[1])    -- value that was closed
+      else
+        assert(res2[i] == t[i])
+      end
+    end
+  end
+
+  local function foo ()
+    local x <close> = func2close(coroutine.yield)   -- "regular" yield
+    local extra <close> = func2close(function (self)
+      assert(self == extrares)
+      coroutine.yield(100)    -- first (extra) yield
+    end)
+    extrares = extra
+    return table.unpack{10, x, 30}
+  end
+  check(foo, true, 10, "x", 30)
+  assert(extrares == 100)
+
+  local function foo ()
+    local x <close> = func2close(coroutine.yield)   -- "regular" yield
+    return
+  end
+  check(foo, false)
+
+  local function foo ()
+    local x <close> = func2close(coroutine.yield)   -- "regular" yield
+    local y, z = 20, 30
+    return x
+  end
+  check(foo, false, "x")
+
+  local function foo ()
+    local x <close> = func2close(coroutine.yield)   -- "regular" yield
+    local extra <close> = func2close(coroutine.yield)  -- extra yield
+    return table.unpack({}, 1, 100)   -- 100 nils
+  end
+  check(foo, true, table.unpack({}, 1, 100))
+
+end
+
+do
+  -- yielding inside closing metamethods after an error
+
+  local co = coroutine.wrap(function ()
+
+    local function foo (err)
+
+      local z <close> = func2close(function(_, msg)
+        assert(msg == nil or msg == err + 20)
+        coroutine.yield("z")
+        return 100, 200
+      end)
+
+      local y <close> = func2close(function(_, msg)
+        -- still gets the original error (if any)
+        assert(msg == err or (msg == nil and err == 1))
+        coroutine.yield("y")
+        if err then error(err + 20) end   -- creates or changes the error
+      end)
+
+      local x <close> = func2close(function(_, msg)
+        assert(msg == err or (msg == nil and err == 1))
+        coroutine.yield("x")
+        return 100, 200
+      end)
+
+      if err == 10 then error(err) else return 10, 20 end
+    end
+
+    coroutine.yield(pcall(foo, nil))  -- no error
+    coroutine.yield(pcall(foo, 1))    -- error in __close
+    return pcall(foo, 10)     -- 'foo' will raise an error
+  end)
+
+  local a, b = co()   -- first foo: no error
+  assert(a == "x" and b == nil)    -- yields inside 'x'; Ok
+  a, b = co()
+  assert(a == "y" and b == nil)    -- yields inside 'y'; Ok
+  a, b = co()
+  assert(a == "z" and b == nil)    -- yields inside 'z'; Ok
+  local a, b, c = co()
+  assert(a and b == 10 and c == 20)   -- returns from 'pcall(foo, nil)'
+
+  local a, b = co()   -- second foo: error in __close
+  assert(a == "x" and b == nil)    -- yields inside 'x'; Ok
+  a, b = co()
+  assert(a == "y" and b == nil)    -- yields inside 'y'; Ok
+  a, b = co()
+  assert(a == "z" and b == nil)    -- yields inside 'z'; Ok
+  local st, msg = co()             -- reports the error in 'y'
+  assert(not st and msg == 21)
+
+  local a, b = co()    -- third foo: error in function body
+  assert(a == "x" and b == nil)    -- yields inside 'x'; Ok
+  a, b = co()
+  assert(a == "y" and b == nil)    -- yields inside 'y'; Ok
+  a, b = co()
+  assert(a == "z" and b == nil)    -- yields inside 'z'; Ok
+  local st, msg = co()    -- gets final error
+  assert(not st and msg == 10 + 20)
+
+end
+
+
+do
+  -- an error in a wrapped coroutine closes variables
+  local x = false
+  local y = false
+  local co = coroutine.wrap(function ()
+    local xv <close> = func2close(function () x = true end)
+    do
+      local yv <close> = func2close(function () y = true end)
+      coroutine.yield(100)   -- yield doesn't close variable
+    end
+    coroutine.yield(200)   -- yield doesn't close variable
+    error(23)              -- error does
+  end)
+
+  local b = co()
+  assert(b == 100 and not x and not y)
+  b = co()
+  assert(b == 200 and not x and y)
+  local a, b = pcall(co)
+  assert(not a and b == 23 and x and y)
+end
+
+
+do
+
+  -- error in a wrapped coroutine raising errors when closing a variable
+  local x = 0
+  local co = coroutine.wrap(function ()
+    local xx <close> = func2close(function (_, msg)
+      x = x + 1;
+      assert(string.find(msg, "@XXX"))
+      error("@YYY")
+    end)
+    local xv <close> = func2close(function () x = x + 1; error("@XXX") end)
+    coroutine.yield(100)
+    error(200)
+  end)
+  assert(co() == 100); assert(x == 0)
+  local st, msg = pcall(co); assert(x == 2)
+  assert(not st and string.find(msg, "@YYY"))   -- should get error raised
+
+  local x = 0
+  local y = 0
+  co = coroutine.wrap(function ()
+    local xx <close> = func2close(function (_, err)
+      y = y + 1;
+      assert(string.find(err, "XXX"))
+      error("YYY")
+    end)
+    local xv <close> = func2close(function ()
+      x = x + 1; error("XXX")
+    end)
+    coroutine.yield(100)
+    return 200
+  end)
+  assert(co() == 100); assert(x == 0)
+  local st, msg = pcall(co)
+  assert(x == 1 and y == 1)
+  -- should get first error raised
+  assert(not st and string.find(msg, "%w+%.%w+:%d+: YYY"))
+
+end
+
+
+-- a suspended coroutine should not close its variables when collected
+local co
+co = coroutine.wrap(function()
+  -- should not run
+  local x <close> = func2close(function () os.exit(false) end)
+  co = nil
+  coroutine.yield()
+end)
+co()                 -- start coroutine
+assert(co == nil)    -- eventually it will be collected
+collectgarbage()
+
+
+if rawget(_G, "T") then
+  print("to-be-closed variables x coroutines in C")
+  do
+    local token = 0
+    local count = 0
+    local f = T.makeCfunc[[
+      toclose 1
+      toclose 2
+      return .
+    ]]
+
+    local obj = func2close(function (_, msg)
+      count = count + 1
+    € token = coroutine.yield(count, token)
+    end)
+
+    local co = coroutine.wrap(f)
+    local ct, res = co(obj, obj, 10, 20, 30, 3)   -- will return 10, 20, 30
+    -- initial token value, after closing 2nd obj
+    assert(ct == 1 and res == 0)
+    -- run until yield when closing 1st obj
+    ct, res = co(100)
+    assert(ct == 2 and res == 100)
+    res = {co(200)}      -- run until end
+    assert(res[1] == 10 and res[2] == 20 and res[3] == 30 and res[4] == nil)
+    assert(token == 200)
+  end
+
+  do
+    local f = T.makeCfunc[[
+      toclose 1
+      return .
+    ]]
+
+    local obj = func2close(function ()
+      local temp
+      local x <close> = func2close(function ()
+        coroutine.yield(temp)
+        return 1,2,3    -- to be ignored
+      end)
+      temp = coroutine.yield("closing obj")
+      return 1,2,3    -- to be ignored
+    end)
+
+    local co = coroutine.wrap(f)
+    local res = co(obj, 10, 30, 1)   -- will return only 30
+    assert(res == "closing obj")
+    res = co("closing x")
+    assert(res == "closing x")
+    res = {co()}
+    assert(res[1] == 30 and res[2] == nil)
+  end
+
+  do
+    -- still cannot yield inside 'closeslot'
+    local f = T.makeCfunc[[
+      toclose 1
+      closeslot 1
+    ]]
+    local obj = func2close(coroutine.yield)
+    local co = coroutine.create(f)
+    local st, msg = coroutine.resume(co, obj)
+    assert(not st and string.find(msg, "attempt to yield across"))
+
+    -- nor outside a coroutine
+    local f = T.makeCfunc[[
+      toclose 1
+    ]]
+    local st, msg = pcall(f, obj)
+    assert(not st and string.find(msg, "attempt to yield from outside"))
+  end
+end
+
+
+
+-- to-be-closed variables in generic for loops
+do
+  local numopen = 0
+  local function open (x)
+    numopen = numopen + 1
+    return
+      function ()   -- iteration function
+        x = x - 1
+        if x > 0 then return x end
+      end,
+      nil,   -- state
+      nil,   -- control variable
+      func2close(function () numopen = numopen - 1 end)   -- closing function
+  end
+
+  local s = 0
+  for i in open(10) do
+     s = s + i
+  end
+  assert(s == 45 and numopen == 0)
+
+  local s = 0
+  for i in open(10) do
+     if i < 5 then break end
+     s = s + i
+  end
+  assert(s == 35 and numopen == 0)
+
+  local s = 0
+  for i in open(10) do
+    for j in open(10) do
+       if i + j < 5 then goto endloop end
+       s = s + i
+    end
+  end
+  ::endloop::
+  assert(s == 375 and numopen == 0)
+end
+
+print('OK')
+
+return 5,f
+
+end   -- }
+

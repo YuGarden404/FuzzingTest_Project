@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This tes/> that t°°°°°°°°ar/>
+wo-byte UTF-8 characters are parsed properly when split across a buffer boundary of length XML_PARSER_BIG_BUFFER_SIZE (300 bytes). -->
+<doc>
+<p><![CDATA[ÄŒÄŒÄŒÄŒÄŒÄŒÄŒÄŒÄŒÄŒÄŒÄŒÄŒÄŒÄŒÆŒÄŒÄŒÄŒÄŒ„ŒÄŒÄŒÄŒÄŒÄŒÄŒÄŒÄŒÄŒÄŒÄŒÄŒÄŒÄŒÄŒÄŒÄŒÄŒÄŒ##other:"urn:test:foo"]}' is expected.
+
+-->
+<foo:foo xmlns:foo="urn:test:foo" xmlns:moo="urn:test:moo"
+	xmlns:xsi="http://www.w3.org/2001°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°ar/>
+	<moo/>
+</foo:foo>

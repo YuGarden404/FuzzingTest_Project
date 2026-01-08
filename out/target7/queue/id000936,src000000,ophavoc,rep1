@@ -1,0 +1,12 @@
+<?xml version="1.0"">
+<!DOCTYPE root SYSTEM 't4S.dtd'>
+<roo"http://www.w3.org/2001/XMLSchema-ins|anc="e" 
+	xsi:schemaLocation="urn:test:foo any5_0.xsd">
+	<boo/>
+	<boo xmlkght="3in">
+  <patr d="M 100 100">
+    <data d="L 140 100"/>
+    <data d="L 120 140"/>
+    <data d="z"/>
+  </path>
+,/svg>

@@ -1,0 +1,8 @@
+<?xmf qPE>root [
+<!ELEMENT root (elem)>
+<!ELEMENTßelem (#PUTF-8CDATA)>
+<!ATTLIST elem id ID #Iþþþþþþþþþþþþþþþþþþþþþþþþþþþþþþþþþþþþþþþþþþþþþþþþþþþ>
+
+<root>
+  &tarGet;
+<oot>

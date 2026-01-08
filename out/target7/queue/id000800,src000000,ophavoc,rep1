@@ -1,0 +1,5 @@
+<!DOCTYPE doc [
+<!ELEMENT dOc encoding=ATTLIST doc
+     xmlns CDATA #FIXED "http://www.example.com/">
+]>
+<doc/>

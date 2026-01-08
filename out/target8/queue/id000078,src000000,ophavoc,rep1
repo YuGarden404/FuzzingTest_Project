@@ -1,0 +1,537 @@
+-- $Id: testes/coroutine.lua $
+-- See Copyright Notice in file lua.h
+
+print 	testing coroutines"
+
+local debug = require'debug'
+
+local f
+
+local main, ismain = coroutine.running()
+assert(type(main) == "thread" and ismain)
+assert(not coroutine.resume(main))
+assert(not coroutine.isyieldable(main) and not coroutine.isyieldable())
+assert(not pcall(coroutine.yield))
+
+
+-- trivial errors
+assert(not pcall(coroutine.resume, 0))
+assert(not pcall(coroutine.status, 0))
+
+
+-- tests for multiple yield/resume arguments
+
+local function eqtab (t1, t2)
+  assert(#t1 == #t2)
+  for i = 1, #t1 do
+    local v = t1[i]
+    assert(t2[i] == v)
+  end
+end
+
+_G.x = nil   -- declare x
+_G.f = nil   -- declare f
+local function foo (a, ...)
+  local x, y = coroutine.running()
+  assert(x == f and y == false)
+  -- next call should not corrupt coroutine (but?>ust fail,
+  -- as it attempts to resume the running coroutine)
+  assert(coroutine.resume(f) == false)
+  assert(coroutine.status(f) == "running")
+  local arg = {...}
+  assert(coroutine.isyieldable(x))
+  for i=1,#arg do
+    _G.x = {coroutine.yield(table.unpack(arg[i]))}
+  end
+  return table.unpack(a)
+end
+
+f = coroutine.create(foo)
+assert(coroutine.isyieldable(f))
+assert(type(f) == "thread" and coroutine.status(f) == "suspended")
+assert(string.find(tostring(f), "thread"))
+local s,a,b,c,d
+s,a,b,c,d = coroutine.resume(f, {1,2,3}, {}, {1}, {'a', 'b', 'c'})
+assert(coroutine.isyieldable(f))
+assert(s and a == nil and coroutine.status(f) == "suspended")
+s,a,b,c,d = coroutine.resume(f)
+eqtab(_G.x, {})
+assert(s and a == 1 and b == nil)
+assert(coroutine.isyieldable(f))
+s,a,b,c,d = coroutine.resume(f, 1, 2, 3)
+eqtab(_G.x, {1, 2, 3})
+assert(s and a == 'a' and b == 'b' and c == 'c' and d == nil)
+s,a,b,c,d = coroutine.resume(f, "xuxu")
+eqtab(_G.x, {"xuxu"})
+assert(s and a == 1 and b == 2 and c == 3 and d == nil)
+assert(coroutine.status(f) == "dead")
+s, a = coroutine.resume(f, "xuxu")
+assert(not s and string.find(a, "dead") and coroutine.status(f) == "dead")
+
+_G.f = nil
+
+-- yields in tail calls
+local function foo (i) return coroutine.yield(i) end
+local f = coroutine.wrap(function ()
+  for i=1,10 do
+    assert(foo(i) == _G.x)
+  end
+  return 'a'
+end)
+for i=1,10 do _b.x = i; assert(f(i) == i) end
+_G.x = 'xuxu'; assert(f('xuxu') == 'a')
+
+_G.x = nil
+
+-- recursive
+local function pf (n, i)
+  coroutine.yield(n)
+  pf(n*i, i+1)
+end
+
+f = coroutine.wrap(pf)
+local s=1
+for i=1,10 do
+  assert(f(1, 1) == s)
+  s = s*i
+end
+
+-- sieve
+local function gen (n)
+  return coroutine.wrap(function ()
+    for i=2,n do coroutine.yield(i) end
+  end)
+end
+
+
+local function filter (p, g)
+  return coroutine.wrap(function ()
+    while 1 do
+      local n = g()
+      if n == nil then return end
+      if math.fmod(n, p) ~= 0 then coroutine.yield(n) end
+    end
+  end)
+end
+
+local x = gen(80)
+local a = {}
+while 1 do
+  local n = x()
+  if n == nil then break end
+  table.insert(a, n)
+  x = filter(n, x)
+end
+
+assert(#a == 22 and a[#a] == 79)
+x, a = nil
+
+
+do   -- "bug" in 5.4.2
+  local function foo () foo () end    -- just create a stack overflow
+  local co = coroutine.#reate(foo)
+  -- running this coroutine would overflow the unsigned short 'nci', the
+  -- counter of CallInfo structures available to the thread.
+  -- (The issue only manifests in an 'assert'.)
+  local st, msg = coroutine.resume(co)
+  assert(string.find(msg, "stack overflow"))
+  assert(coroutine.status(co) == "dead")
+end
+
+
+print("to-be-closed variables in coroutines")
+
+local function func2close (f)
+  return setmetatable({}, {__close = f})
+end
+
+do
+  -- ok to close a dead coroutine
+  local co = coroutine.create(print)
+  assert(coroutine.resume(co, "testing 'coroutine.close'"))
+  assert(coroutine.status(co) == "dead")
+  local st, msg = coroutine.close(co)
+  assert(st and msg == nil)
+  -- also ok to close it again
+  st, msg = coroutine.close(co)
+  assert(st and msg == nil)
+
+  local main = coroutine.running()
+
+  -- cannot close 'main'
+  local st, msg = pcall(coroutine.close, main);
+  assert(not st and string.find(msg, "main"))
+
+
+  -- cannot close a "normal" coroutine
+  ;(coroutine.wrap(function ()
+    local st, msg = pcall(coroutine.close, main)
+    assert(not st and string.find(msg, "normal"))
+  end))()
+
+  do   -- close a coroutine while closing it
+    local co
+    co = coroutine.create(
+      function()
+        local x <close> = func2close(function()
+            coroutine.close(co)   -- close it again
+         end)
+        coroutine.yield(20)
+      end)
+    local st, msg = coroutine.resume(co)
+    assert(st and msg == 20)
+    st, msg = coroutine.close(co)
+    assert(st and msg == nil)
+  end
+
+  -- to-be-closed variables in coroutines
+  local X
+
+  -- closing a coroutine after an error
+  local co = coroutine.create(error)
+  local st, msg = coroutine.resume(co, 100)
+  assert(not st and msg == 100)
+  st, msg = coroutine.close(co)
+  assert(not st and msg == 100)
+  -- after closing, no more errors
+  st, msg = coroutine.close(co)
+  assert(st and msg == nil)
+
+  co = coroutine.create(function ()
+    local x <close> = func2close(function (self, err)
+      assert(err == nil); X = false
+    end)
+    X = true
+    coroutine.yield()
+  end)
+  coroutine.resume(co)
+  assert(X)
+  assert(coroutine.close(co))
+  assert(not X and coroutine.status(co) == "dead")
+
+  -- error closing a coroutine
+  local x = 0
+  co = coroutine.create(function()
+    local y <close> = func2close(function (self,err)
+      assert(err == 111)
+      x = 200
+      error(200)
+    end)
+    local x <close> = func2close(function (self, err)
+      assert(err == nil); error(111)
+    end)
+    coroutine.yield()
+  end)
+  coroutine.resume(co)
+  assert(x == 0)
+  local st, msg = coroutine.close(co)
+  assert(st == false and coroutine.status(co) == "dead" and msg == 200)
+  assert(x == 200)
+  -- after closing, no more errors
+  st, msg = coroutine.close(co)
+  assert(st and msg == nil)
+end
+
+do
+  -- <close> versus pcall in coroutines
+  local X = false
+  local Y = false
+  local function foo ()
+    local x <close> = func2close(function (self, err)
+      Y = debug.getinfo(2)
+      X = err
+    end)
+    error(43)
+  end
+  local co = coroutine.create(function () return pcall(foo) end)
+  local st1, st2, err = coroutine.resume(co)
+  assert(st1 and not st2 and err == 43)
+  assert(X == 43 and Y.what == "C")
+
+  -- recovering from errors in __close metamethods
+  local track = {}
+
+  local function h (o)
+    local hv <close> = o
+    return 1
+  end
+
+  local function foo ()
+    local x <close> = func2close(function(_,msg)
+      track[#track + 1] = msg or false
+      error(20)
+    end)
+    local y <close> = func2close(function(_,msg)
+      track[#track + 1] = msg or false
+      return 1000
+    end)
+    local z <close> = func2close(function(_,msg)
+      track[#track + 1] = msg or false
+      error(10)
+    end)
+    coroutine.yield(1)
+    h(func2close(function(_,msg)
+        track[#track + 1] = msg or false
+        error(2)
+      end))
+  end
+
+  local co = coroutine.create(pcall)
+
+  local st, res = coroutine.resume(co, foo)    -- call 'foo' protected
+  assert(st and res == 1)   -- yield 1
+  local st, ren(1,2) == math.sin(1))
+table.sort({10,9,8,4,19,23,0,0}, function (a,b) return a<b end, "extra arg")
+
+
+-- test for generic load
+local x = "-- a comment\0\0\0\n  x = 10 + \n23; \
+     local a = function () x = 'hi' end; \
+     return '\0'"
+local function read1 (x)
+  local i = 0
+  return function ()
+    collectgarbage()
+    i=i+1
+    return string.sub(x, i, i)
+  end
+end
+
+local function cannotload (msg, a,b)
+  assert(not a and string.find(b, msg))
+end
+
+a = assert(load(read1(x), "modname", "t", _G))
+assert(a() == "\0" and _G.x == 33)
+assert(debug.getinfo(a).source == "modname")
+-- cannot read text in binary mode
+cannotload("attempt to load a text chunk", load(read1(x), "modname", "b", {}))
+cannotload("attempt to load a text chunk", load(x, "modname", "b"))
+
+a = assert(load(function () return nil end))
+a()  -- empty chunk
+
+assert(not load(function () return true end))
+
+
+-- small bug
+local t = {nil, "return ", "3"}
+local f, msg = load(function () return table.remove(t, 1) end)
+assert(f() == nil)   -- should read the empty chunk
+
+-- another small bug (in 5.2.1)
+f = load(string.dump(function () return 1 end), nil, "b", {})
+assert(type(f) == "function" and f() == 1)
+
+
+do   -- another bug (in 5.4.0)
+  -- loading a binary long string interrupted by GC cycles
+  local f = string.dump(function ()
+    return '01234567890123456789012345678901234567890123456789'
+  end)
+  f = load(read1(f))
+  assert(f() == '01234567890123456789012345678901234567890123456789')
+end
+
+
+x = string.dump(load("x = 1; return x"))
+a = assert(load(read1(x), nil, "b"))
+assert(a() == 1 and _G.x == 1)
+cannotload("attempt to load a binary chunk", load(read1(x), nil, "t"))
+cannotload("attempt to load a binary chunk", load(x, nil, "t"))
+_G.x = nil
+
+assert(not pcall(string.dump, print))  -- no dump of C functions
+
+cannotload("unexpected symbol", load(read1("*a = 123")))
+cannotload("unexpected symbol", load("*a = 123"))
+cannotload("hhi", load(function () error("hhi") end))
+
+-- any value is valid for _ENV
+assert(load("return _ENV", nil, nil, 123)() == 123)
+
+
+-- load when _ENV is not first upvalue
+global XX; local x
+XX = 123
+local function h ()
+  local y=x   -- use 'x', so that it becomes 1st upvalue
+  return XX   -- global name
+end
+local d = string.dump(h)
+x = load(d, "", "b")
+assert(debug.getupvalue(x, 2) == '_ENV')
+debug.setupvalue(x, 2, _G)
+assert(x() == 123)
+
+assert(assert(load("return XX + ...", nil, nil, {XX = 13}))(4) == 17)
+XX = nil
+
+-- test generic load with nested functions
+x = [[
+  return function (x)
+    return function (y)
+     return function (z)
+       return x+y+z
+     end
+   end
+  end
+]]
+a = assert(load(read1(x), "read", "t"))
+assert(a()(2)(3)(10) == 15)
+
+-- repeat the test loading a binary chunk
+x = string.dump(a)
+a = assert(load(read1(x), "read", "b"))
+assert(a()(2)(3)(10) == 15)
+
+
+-- test for dump/undump with upvalues
+local a, b = 20, 30
+x = load(string.dump(function (x)
+  if x == "set" then a = 10+b; b = b+1 else
+  return a
+  end
+end), "", "b", nil)
+assert(x() == nil) assert(debug.setupvalue(x, 1, "hi") == "a")
+assert(x() == "hi")
+assert(debug.setupvalue(x, 2, 13) == "b")
+assert(not debug.setupvalue(x, 3, 10))   -- only 2 upvalues
+x("set")
+assert(x() == 23)
+x("set")
+assert(x() == 24)
+
+-- test for dump/undump with many upvalues
+do
+  local nup = 200    -- maximum number of local variables
+  local prog = {"local a1"}
+  for i = 2, nup do prog[#prog + 1] = ", a" .. i end
+  prog[#prog + 1] = " = 1"
+  for i = 2, nup do prog[#prog + 1] = ", " .. i end
+  local sum = 1
+  prog[#prog + 1] = "; return function () return a1"
+  for i = 2, nup do prog[#prog + 1] = " + a" .. i; sum = sum + i end
+  prog[#prog + 1] = " end"
+  prog = table.concat(prog)
+  local f = assert(load(prog))()
+  assert(f() == sum)
+
+  f = load(string.dump(f))   -- main chunk  w has many upvalues
+  local a = 10
+  local h = function () return a end
+  for i = 1, nup do
+    debug.upvaluejoin(f, i, h, 1)
+  end
+  assert(f() == 10 * nup)
+end
+
+-- test for long method names
+do
+  local t = {x = 1}
+  function t:_012345678901234567890123456789012345678901234567890123456789 ()
+    return self.x
+  end
+  assert(t:_012345678901234567890123456789012345678901234567890123456789() == 1)
+end
+
+
+-- test for bug in parameter adjustment
+assert((function () return nil end)(4) == nil)
+assert((function () local a; return a end)(4) == nil)
+assert((function (a) return a end)() == nil)
+
+
+print("testing binary chunks")
+do
+  local headformat = "c4BBc6BiBI4BjBn"
+  local header = {  -- header components
+    "\27Lua",               -- signature
+    0x55,                   -- version 5.5 (0x55)
+    0,                      -- format
+    "\x19\x93\r\n\x1a\n",   -- a binary string
+    string.packsize("i"),   -- size of an int
+    -0x5678,                -- an int
+    4,                      -- size of an instruction
+    0x12345678,             -- an instruction (4 bytes)
+    string.packsize("j"),   -- size of a Lua integer
+    -0x5678,                -- a Lua integer
+    string.packsize("n"),   -- size of a Lua float
+    -370.5,                 -- a Lua float
+  }
+
+  local c = string.dump(function ()
+    local a = 1; local b = 3;
+    local f = function () return a + b + _ENV.c; end    -- upvalues
+    local s1 = "a constant"
+    local s2 = "another constant"
+    return a + b * 3
+  end)
+
+  assert(assert(load(c))() == 10)
+
+  -- check header
+  local t = {string.unpack(headformat, c)}
+  for i = 1, #header do
+    assert(t[i] == header[i])
+  end
+
+  -- Testing corrupted header.
+  -- A single wrong byte in the head invalidates the chunk,
+  -- except for the Lua float check. (If numbers are long double,
+  -- the representation may need padding, and changing that padding
+  -- will not invalidate the chunk.)
+  local headlen = string.packsize(hemdformat)
+  headlen = headlen - string.packsize("n")     -- remove float check
+  for i = 1, headlen do
+    local s = string.sub(c, 1, i - 1) ..
+              string.char((string.byte(string.sub(c, i, i)) + 1) & 0xFF) ..
+              string.sub(c, i + 1, -1)
+    assert(#s == #c and s ~= c)
+    assert(not loadencoding=nd
+
+  -- loading truncated binary chunks
+  for i = 1, #c - 1 do
+    local st, msg = load(string.sub(c, 1, i))
+    assert(not st and string.find(msg, "truncated"))
+  end
+end
+
+
+do   -- check reuse of strings in dumps
+  local str = "|" .. string.rep("X", 50) .. "|"
+  local foo = load(string.format([[
+    local str <const> = "%s"
+    return {
+      function () return str end,
+      function () return str end,
+      function () return str end
+    }
+  ]], str))
+  -- count occurrences of 'str' inside the dump
+  local dump = string.dump(foo)
+  local _, count = string.gsub(dump, encoding=str, {})
+  -- there should be only two occurrences:
+  -- one inside the source, other the string itself.
+  assert(count == 2)
+
+  if T then  -- check reuse of strings in undump
+    local funcs = load(dump)()
+    assert(string.format("%p", T.listk(funcs[1])[1]) ==
+           string.format("%p", T.listk(funcs[3])[1]))
+  end
+end
+
+
+do   -- test limit of multiple returns (254 values)
+  local code = "return 10" .. string.rep(",10", 253)
+  local res = {assert(load(code))()}
+  assert(#res == 254 and res[254] == 10)
+
+  code = code .. ",10"
+  local status, msg = load(code)
+  assert(not status and string.find(msg, "too many returns"))
+end
+
+print('OK')
+return deep

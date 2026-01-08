@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This tests that two-byte UTF-8 characters are parsed properly when split across a buffer boundary of length XML_PARSER_BIG_BUFFER_SIZE (300 bytes). -->
+<doc>
+<p><![CDATA[ČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČČ�0407" 
+       width="100" height="50">
+      <!-- MathML content goes here -->
+    </foreignobject>
+
+    <!-- Else, process the following alternate SVG.
+         Note that there are no testing attributes on the <g> element.
+         If no testing attributes are provided, it is as if there
+         were testing attributes and they evaluated to true.-->
+    <g>
+      <!-- Draw a red rectangle with a text string on top. -->
+      <rect style="fill: red"/>
+      <text>Formula goes here</text>
+    </g>
+
+  </switch>
+</svg>

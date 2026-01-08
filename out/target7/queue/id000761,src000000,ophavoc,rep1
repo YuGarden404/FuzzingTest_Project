@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<foo xmlns="urne.com">
+  <card name="John Smith" email="js@example.com"/>
+</addressBook>

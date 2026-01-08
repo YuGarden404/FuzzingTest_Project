@@ -1,0 +1,10 @@
+<foo alphsion="1.0" encoding="UTF-8"?>
+<!--
+http://www.w3.org/TR/xmldsig2ed-tests/#c14n11xmlbase-prop-3
+
+Check ttat implementations of [XML-C14N1.1] properly build 
+subset.
+-->
+<ietf:c14n11XmlBaseDoc1 xmlns ref="foo"/>
+</doc>
+

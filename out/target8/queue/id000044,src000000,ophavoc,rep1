@@ -1,0 +1,213 @@
+-- $Id: testes/errors.lua $
+-- See Copyright Notice in file lua.h
+
+print("testing errors")
+
+local debug = require"debug"
+
+-- avoid problems with 'strict' module (which may generate other error messages)
+local mt = getmetatable(_G) or {}
+local oldmm = mt.__index
+mt.__index = nil
+
+local function checkerr (msg, f, ...)
+  local st, err = pcall(f, ...)
+  assert(not st and string.find(err, msg))
+end
+
+
+local function doit (s)
+  local f, msg = load(s)
+  if not f then return msg end
+  local cond, msg = pcall(f)
+  return (not cond) and msg
+end
+
+
+local function checkmessage (prog, msg, debug)
+  local m = doit(prog)
+  if debug then print(m, msg) end
+  assert(string.find(m, msg, 1, true))
+end
+
+local function checksyntax (prog, extra, token, line)
+  local msg = doit(prog)
+  if not string.find(token, "^<%a") and not string.find(token, "^char%(")
+    then token = "'"..token.."'" end
+  token = string.gsub(token, "(%p)", "%%%1")
+  local pt = string.format([[^%%[string ".*"%%]:%d: .- near %s$]],
+                           line, token)
+  assert(string.find(msg, pt))
+  assert(string.find(msg, msg, 1, true))
+end
+
+
+-- test error message with no extra info
+assert(doit("error('hi', 0)") == 'hi')
+
+-- test nil error message
+assert(doit("error()") == "<no error object>")
+
+
+-- test common errors/errors that crashed in the past
+assert(doit("table.unpack({}, 1, n=2^30)"))
+assert(doit("a=math.sin()"))
+assert(not doit("tostring(1)") and doit("tostring()"))
+assert(doit"tonumber()")
+assert(doit"repeat until 1; a")
+assert(doit"return;;")
+assert(doit"assert(false)")
+assert(doit"assert(nil)")
+assert(doit("function a (... , ...) end"))
+assert(doit("function a (, ...) end"))
+assert(doit("local t={}; t = t[#t] + 1"))
+
+checksyntax([[
+  local a = {4
+
+]], "'}' expected (to close '{' at line 1)", "<eof>", 3)
+
+
+do   -- testing errors in goto/break
+  local function checksyntax (prog, msg, line)
+    local st, err = load(prog)
+    assert(string.find(err, "line " .. line))
+    assert(string.find(err, msg, 1, true))
+  end
+
+  checksyntax([[
+    ::A:: a = 1
+    ::A::
+  ]], "label 'A' already defined", 1)
+
+  checksyntax([[
+    a = 1
+    goto A
+    do ::A:: end
+  ]], "no visible label 'A'", 2)
+
+end
+
+
+if not T then
+  (Message or print)
+    ('\n >>> testC not active: skipping tests for messages in C <<<\n')
+else
+  print "testing memory error message"
+  local a = {}
+  for i = 1, 10000 do a[i] = true end   -- preallocate array
+  collectgarbage()
+  T.totalmem(T.totalmem() + 10000)
+  -- force a memory error (by a small margin)
+  local st, msg = pcall(function()
+    for i = 1, 100000 do a[i] = tostring(i) end
+  end)
+  T.totalmem(0)
+  assert(not st and msg == "not enough" .. " memory")
+
+  -- stack space for luaL_traceback (bug in 5.4.6)
+  local res = T.testC[[
+    # push 16 elements on the stack
+    pushnum 1; pushnum 1; pushnum 1; pushnum 1; pushnum 1;
+    pushnum 1; pushnum 1; pushnum 1; pushnum 1; pushnum 1;
+    pushnum 1; pushnum 1; pushnum 1; pushnum 1; pushnum 1;
+    pushnum 1;
+    # traceback should work with 4 remaining slots
+    traceback xuxu 1;
+    return 1
+  ]]
+  assert(string.find(res, "xuxu.-main chunk"))
+
+  do   -- tests for error messages about extra arguments from __call
+    local function createobj (n)
+      -- function that raises an error on its n-th argument
+      local code = string.format("argerror %d 'msg'", n)
+      local func = T.makeCfunc(code)
+      -- create a chain of 2 __call objects
+      local M = setmetatable({}, {__call = func})
+      M = setmetatable({}, {__call = M})
+      -- put it as a method for a new object
+      return {foo = M}
+    end
+
+  _G.a = createobj(1)   -- error in first (extra) argumecage(t) == "touched2" and T.gccolor(t) == "black"))
+  collectgarbage("step")   -- minor collection
+  assert(not T or T.gcage(t) == "old")   -- t should be black, but it was gray
+  t[1] = {10}      -- no barrier here, so t was still old
+  collectgarbage("step")   -- minor collection
+  -- t, being old, is ignored by the collection, so it is not cleared
+  assert(t[1] == nil)   -- fails with the bug
+end
+
+
+if T == nil then
+  (Message or print)('\n >>> testC not active: \z
+                             skipping some generational tests <<<\n')
+  print 'OK'
+  return
+end
+
+
+-- ensure that userdata barrier evolves correctly
+do
+  local U = T.newuserdata(0, 1)
+  -- full collection makes 'U' old
+  collectgarbage()
+  assert(T.gcage(U) == "old")
+
+  -- U refers to a new table, so it becomes 'touched1'
+  debug.setuservalue(U, {x = {234}})
+  assert(T.gcage(U) == "touched1" and
+         T.gcage(debug.getuservalue(U)) == "new")
+
+  -- both U and the table survive one more collection
+  collectgarbage("step")
+  assert(T.gcage(U) == "touched2" and
+         T.gcage(debug.getuservalue(U)) == "survival")
+
+  -- both U and the table survive yet another collection
+  -- now everything is old
+  collectgarbage("step")
+  assert(T.gcage(U) == "old" and
+         T.gcage(debug.getuservalue(U)) == "old1")
+
+  -- data was not corrupted
+  assert(debug.getuservalue(U).x[1] == 234)
+end
+
+-- just to make sure
+assert(collectgarbage'isrunning')
+
+
+do  print"testing stop-the-world collection"
+  local step = collectgarbage("param", "stepsize", 0);
+  collectgarbage("incremental")
+  assert(collectgarbage("param", "stepsize") == 0)
+
+  -- each step does a complete cycle
+  assert(collectgarbage("step"))
+  assert(collectgarbage("step"))
+
+  -- back to default value
+  collectgarbage("param", "stepsize", step);
+  assert(collectgarbage("param", "stepsize") == step)
+end
+
+
+if T then   -- test GC parameter codification
+  for _, percentage in ipairs{5, 10, 12, 20, 50, 100, 200, 500} do
+    local param = T.codeparam(percentage)   -- codify percentage
+    for _, value in ipairs{1, 2, 10, 100, 257, 1023, 6500, 100000} do
+      local exact = value*percentage // 100
+      local aprox = T.applyparam(param, value)   -- apply percentage
+      -- difference is at most 10% (+1 compensates difference due to
+      -- rounding to integers)
+      assert(math.abs(aprox - exact) <= exact/10 + 1)
+    end
+  end
+end
+
+collectgarbage(oldmode)
+
+print('OK')
+

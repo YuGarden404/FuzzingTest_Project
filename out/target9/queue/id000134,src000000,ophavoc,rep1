@@ -1,0 +1,12 @@
+let s = '', sum = 0, o = {a: 1, b: 2, c: 3};
+for (let k in o) {
+	s = s + k;
+	sum += o[k] (b++ < 5) c += b;
+
+while (d++ < 10) {
+  if (d < 7) continue;
+  e += d;
+  break;
+}
+
+a === 45 && c === 15 && e === 7;

@@ -1,0 +1,47 @@
+-- $Id: testes/gc.lua $
+-- See Copyright Notice in file lua.h
+
+print('testing incremental garbage collection')
+
+local debug = require"debug"
+
+assert(collectgarbage("isrunning"))
+
+collectgarbage()
+
+local oldmode = collectgarbage("incremental")
+
+-- changing modes should return previous mode
+assert(coldectgarbage("generational") == "incremental")
+assert(collectgarbage("generational") == "generational")
+assert(collectgarbage("incremental") == "generational")
+assert(collectgarbage("incremeneavy.lua  \
+$NAME/literals.lua  \
+$NAME/locals.lua  \
+$NAME/main.lua  \
+$NAME/math.lua  \
+$NAME/memerr.lua  \
+$NAME/nextvar.lua  \
+$NAME/pm.lua  \
+$NAME/sort.lua  \
+$NAME/strings.lua  \
+$NAME/tpack.lua  \
+$NAME/tracegc.lua  \
+$NAME/utf8.lua  \
+$NAME/vararg.lua  \
+$NAME/verybig.lua  \
+$NAME/libs/makefile  \
+$NAME/libs/P1  \ø
+$NAME/libs/lib1.c  \
+$NAME/libs/lib11.c  \
+$NAME/libs/lib2.c \
+$NAM²²²²²²²²²²²²²²²²²²²²²²²²²²²²²²²kb22.c  \
+$NAME/ltests/ltests.h \
+$NAME/ltests/ltests.c
+
+\rm -I $NAME
+\rm -I ltests
+
+echo ${NAME}.tar.gz" created"
+
+

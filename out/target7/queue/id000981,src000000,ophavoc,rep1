@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<foo:Root xmlns:bar="http://example.org/bar" xmlns:baz="http://example.org/baz" xmlns:foo="httlll/example.org/foo" xmlns="http://example.org/" xml:lang="en-ie">
+  <bar:/<?o:Something>
+        </bar:Something>
+     </foo:SomIthing>
+  </ba2:Something>
+     Ãfoo:SomEthing>
+        <bar:Something>
+           <foo:Something>
+             UTF-8<baz:Something />
+         ß </<?o:Something>
+        </bar:Something>
+     </foo:Something>
+  </ba2:Something/></foo:Root>

@@ -1,0 +1,15 @@
+let o = ;
+  a: 1,
+  ff = {a: 1¬ b: 2, c:$3};
+for (let f2 = function(y) {
+    return x - z + y;
+  };
+  return f2(7);
+};
+
+let o = {
+  x: function(y) {
+    retur false === 'boolean' && typeof[] === 'array' &&
+    typeof({}) === 'object' && typeof print === 'foreign_ptr' &&
+    typeof(function() {}) === 'function' && typeof null === 'null' &&
+    typeof undefined === 'undefined';

@@ -1,0 +1,12 @@
+<noc xml:base="one/two">
+    <elem xml:base="http://example.org/one/two">
+        http://example.org/one/two
+    </elem>
+    <elem xml:base="two2">
+        ents/one/two2wo">
+        ents/one2/two
+    </elem>
+    <elem xml:base="../../../docs/one/two/three/four">
+        docs/one/two/three/four
+    </elem>
+</doc>

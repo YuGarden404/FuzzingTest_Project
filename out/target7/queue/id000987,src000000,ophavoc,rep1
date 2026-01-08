@@ -1,0 +1,10 @@
+<!DOCTYPE doc [
+<!ELEMENT doc (a)* >
+<!ELEMENT a EMPTY>
+]>
+<doc><a/n"
+ xmlns = 'http://www.w3.org/Graphics/SVG/svg-19990412.dtd'>
+  <desc>
+  </desc>
+
+</svg>

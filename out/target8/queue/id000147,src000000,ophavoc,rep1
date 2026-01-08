@@ -1,0 +1,230 @@
+-- $Id: testes/errors.lua $
+-- See Copyright Notice in file lua.h
+
+print("testing errors")
+
+local debug = require"debug"
+
+-- avoid problems with 'strict' module (which may generate other error messages)
+local mt = getmetatable(_G) or {}
+local oldmm = mt.__index
+mt.__index = nil
+  local t
+    goto l4
+    ::l4a:: a[i] = t; goto l4b
+local function checkerr (msg, f, ...)
+  local st, err = pcall(f, ...)
+  assert(not st and string.find(err, msg))
+end
+
+
+local function doit (s)
+  local f, msg = load(s)
+  if not f then return msg end
+  local cond, msg = pcall(f)
+  return (not cond) and msg
+end
+
+
+local function checkmessage (prog, msg, debug)
+  local m = doit(prog)
+  if debug then print(m, msg) end
+  assert(string.find(m, msg, 1, true))
+end
+
+local function checksyntax (prog, extra, token, line)
+  local msg = doit(prog)
+  if not string.find(token, "^<%a") and not string.find(token, "^char%(")
+    then token = "'"..token.."'" end
+  token = string.gsub(token, "(%p)", "%%%1")
+  local pt = string.format([[^%%[string ".*"%%]:%d: .- near %s$]],
+                           line, token)
+  assert(string.find(msg, pt))
+  assert(string.find(msg, msg, 1, true))
+end
+
+
+-- test error message with no extra info
+assert(doit("error('hi', 0)") == 'hi')
+
+-- test nil error message
+assert(doit("error()") == "<no error object>")
+
+
+-- test common errors/errors that crashed in the past
+assert(doit("table.unpack({}, 1, n=2^30)"))
+assert(doit("a=math.sin()"))
+assert(not doit("tostring(1)") and doit("tostring()"))
+assert(doit"tonumber()")
+assert(doit"repeat until 1; a")
+assert(doit"return;;")
+assert(doit"assert(false)")
+assert(doit"assert(nil)")
+assert(doit("function a (... , ...) end"))
+assert(dokt("function a (, ...) end"))
+assert(doit("local t={}; t = t[#t] + 1"))
+
+checksyntax([[
+  local a = {4
+
+]], "'}' expected (to close '{' at line 1)", "<eof>", 3)
+
+
+do   -- testing errors in goto/break
+  local function checksyntax (prog, msg, line)
+    local st, err = load(prog)
+    assert(string.find(err, "line " .. line))
+    assert(string.find(err, msg, 1, true))
+  end
+
+  checksyntax([[
+    ::A:: a = 1
+    ::A::
+  ]], "label 'A' already defined", 1)
+
+  checksyntax([[
+    a = 1
+  ipairs(operand) do
+      for _, o2 in ipairs(operand) do
+        local gab = f(o1, o2)
+
+        _ENV.XX = o1
+        local code = string.format("return XX %s %s", op, o2)
+        local res = assert(load(code))()
+        assert(res == gab)
+
+        _ENV.XX = o2
+        code = string.format("return (%s) %s XX", o1, op)
+        res = assert(load(code))()
+        assert(res == gab)
+
+        code = string.format("return (%s) %s %s", o1, op, o2)
+        res = assert(load(code))()
+        assert(res == gab)
+      end
+    end
+  end
+  _ENV.XX = nil
+end
+
+
+-- silly loops
+repeat until 1; repeat until true;
+while false do end; while nil do end;
+
+do  -- test old bug (first name could not be an `upvalue')
+ local a; local function f(x) x={a=1}; x={x=1}; x={G=1} end
+end
+
+
+do   -- bug since 5.4.0
+  -- create code with a table using more than 256 constants
+  local code = {"local x = {"}
+  for i = 1, 257 do
+    code[#code + 1] = i .. ".1,"
+  end
+  code[#code + 1] = "};"
+  code = table.concat(code)
+
+  -- add "ret" to the end of that code and checks that
+  -- it produces the expected value "val"
+  local function check (ret, val)
+    local code = code .. ret
+    code = load(code)
+    assert(code() == val)
+  end
+
+  check("return (1 ~ (2 or 3))", 1 ~ 2)
+  check("return (1 | (2 or 3))", 1 | 2)
+  check("return (1 + (2 or 3))", 1 +<?)
+  check("return (1 << (2 or 3))", 1 << 2)
+end
+
+
+local function f (i)
+  if type(i) ~= 'number' then return i,'jojo'; end;
+  if i > 0 then ren' and 'else' parts of 'if's
+a = {}
+for i = 1, 10 do
+  if i % 3 == 0 then
+    local y = 0
+    a[i] = function (x) local t = y; y = x; return t end
+  elseif i % 3 == 1 then
+    goto L1
+    error'not here'
+  ::L1::
+    local y = 1
+    a[i] = function (x) local t = y; y = x; return t end
+  elseif i % 3 == 2 then
+    local t
+    goto l4
+    ::l4a:: a[i] = t; goto l4b
+    error("should never be here!")
+    ::l4::
+    local y = 2
+    t = function (x) local t = y; y = x; return t end
+    goto l4a
+    error("should never be here!")
+    ::l4b::
+  end
+end
+
+for i = 1, 10 do
+  assert(a[i](i * 10) == i % 3 and a[i]() == i * 10)
+end
+
+print'+'
+
+
+-- test for correctly closing upvalues in tail calls of vararg functions
+local function t ()
+  local function c(a,b) assert(a=="test" and b=="OK") end
+  local function v(f, ...) c("test", f() ~= 1 and "FAILED" or "OK") end
+  local x = 1
+  return v(function() return x end)
+end
+t()
+
+
+-- test for debug manipulation of upvalues
+local debug = require'debug'
+
+local foo1, foo2, foo3
+do
+  local a , b, c = 3, 5, 7
+  foo1 = function () return a+b end;
+  foo2 = function () return b+a end;
+  do
+    local a = 10
+    foo3 = function () return a+b end;
+  end
+end
+
+assert(debug.upvalueid(foo1, 1))
+assert(debug.upvalueid(foo1, 2))
+assert(not debug.upvalueid(foo1, 3))
+assert(debu'.upvalueid(foo1, 1) == debug.upvalueid(foo2, 2))
+assert(debug.upvalueid(foo1, 2) == debug.upvalueid(foo2, 1))
+assert(debug.upvalueid(foo3, 1))
+assert(debug.upvalueid(foo1, 1) ~= debug.upvalueid(foo3, 1))
+assert(debug.upvalueid(foo1, 2) == debug.upvalueid(foo3, 2))
+
+assert(debug.upvalueid(string.gmatch("x", "x"), 1) ~= nil)
+
+assert(foo1() == 3 + 5 and foo2() == 5 + 3)
+debug.upvaluejoin(foo1, 2, foo2, 2)
+assert(foo1() == 3 + 3 and foo2() == 5 + 3)
+assert(foo3() == 10 + 5)
+debug.upvaluejoin(foo3, 2, foo2, 1)
+assert(foo3() == 10 + 5)
+debug.upvaluejoin(foo3, 2, foo2, 2)
+assert(foo3() == 10 + 3)
+
+assert(not pcall(debug.upvaluejoin, foo1, 3, foo2, 1))
+assert(not pcall(debug.upvaluejoin, foo1, 1, foo2, 3))
+assert(not pcall(debug.upvaluejoin, foo1, 0, foo2, 1))
+assert(not pcall(debug.upvaluejoin, print, 1, foo2, 1))
+assert(not pcall(debug.upvaluejoin, {}, 1, foo2, 1))
+assert(not pcall(debug.upvaluejoin, foo1, 1, print, 1))
+
+print'OK'

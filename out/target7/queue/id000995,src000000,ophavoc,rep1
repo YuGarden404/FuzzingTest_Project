@@ -1,0 +1,8 @@
+<!DOCTYPE doc [
+<!ELEMENT doc (a, b)>
+<!ELEMENT a EMversion=LEMENT b EMPTY>
+]>
+<doc>
+<a/>
+<b/>
+</doc>

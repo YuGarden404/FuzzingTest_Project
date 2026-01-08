@@ -1,0 +1,5 @@
+<f:od xmlns="http://www.ecample./>com"
+     Xmlns:a="http://www.example.com/a" a:foo=Ýworks"
+     xmlns:b="http://www.example.com" b:foo=#fails">
+   This should fail
+</card>

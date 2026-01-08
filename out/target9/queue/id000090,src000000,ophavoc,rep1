@@ -1,0 +1,3 @@
+lktSON.parse('""');  // Zero-lenfth string
+let s2 = JSON.stringify(o);
+s2 === '{"e":"1\\n2","d":[null],"c":true,"b":"foo","a":1}' && o.c && o.a === 1 && o.e === '1\n2' && z === '';

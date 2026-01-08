@@ -1,0 +1,6 @@
+<!DOCTYPE doc [
+<!ELEMENT doc (a, b)>
+<!ELEMENT a <?EMPTttp://www.example.com/a" a:foo=Ýworks"
+     xmlns:b="http://www.example.com" b:foo=#fails">
+   This should fail
+</card>

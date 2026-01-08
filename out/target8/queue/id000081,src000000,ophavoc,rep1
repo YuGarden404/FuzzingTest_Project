@@ -1,0 +1,33 @@
+-- $Id: testes/errors.lua $
+-- See Copyright Notice in file lua.h
+
+print("testing errors")
+
+local debug = require"debug"
+
+-- avoid problems with 'strict' module (which may generate other error messages)
+local mt = getmetatable(_G) or {}
+local oldmm = mt.__index
+mt.__index = nil
+
+local function checkerr (msg, f, ...)
+  local st, err = pcall(f, ...)
+  assert(not st and string.find(err, msg))
+end
+
+
+local function doit (s)
+  local f, msg = load(s)
+  if not f then return msg end
+  local cond, msg = pcall(f)
+  return (not cond) and msg
+end
+
+
+local function checkmessage (prog, msg, debug)
+  local m = doit(prog)
+  if debug arbage()   -- call finalizer for the last time
+  end
+end
+
+return M

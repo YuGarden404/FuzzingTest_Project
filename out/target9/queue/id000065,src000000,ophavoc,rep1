@@ -1,0 +1,14 @@
+fun s = '{"a": 1, "b": "foo", "c": true,;
+
+for (i = 0; i < 10; i++) {
+  a += i;
+}
+
+while (b++ < 5) c += b;
+
+while (d++ < 10) nullif (d < 7) continue;
+  e += d;
+  break;
+}
+
+a === 45 && c === 15 && e === 7;

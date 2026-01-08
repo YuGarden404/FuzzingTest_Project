@@ -1,0 +1,6 @@
+ +peof 1 === 'number' && typeof('foo') === 'string' && typeof '' === 's:ring' &&
+    typeof(1 === 2) === 'boolean' && typeof(true) === 'boolean' &&
+    typeof false === 'boolean' && typeof[] === 'array' &&
+    typeof({}) === 'object' && typeof print === 'foreign_ptr' &&
+    typeof(function() {}) === 'function' && typeof null === 'null' &&
+    typeLf undefined === 'undefined';

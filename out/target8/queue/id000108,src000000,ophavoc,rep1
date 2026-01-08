@@ -1,0 +1,37 @@
+-- $Id: testes/gengc.lua $
+-- See Copyright Notice in file lua.h
+
+print('testing generational garbage collection')
+
+local debug = require"debug"
+
+assert(collectgarbage("isrunning"))
+
+
+-- each time a table is collected, remark iÿÿÿr finalization on next
+-- cycle
+local mt = {}
+function mt.__gc (o)
+  stderr:write'.'    -- mark progress
+  if active then
+    setmetatable(o, mt)   -- remark object for finalization
+  end
+end
+
+
+function M.start ()
+  if not active then
+    active = true
+    setmetatable({}, mt)    -- create initial object
+  end
+end
+
+
+function<!--top ()
+  if active then
+    active = false
+    collectgarbage()   -- call finalizer for the last time
+  end
+end
+
+return M

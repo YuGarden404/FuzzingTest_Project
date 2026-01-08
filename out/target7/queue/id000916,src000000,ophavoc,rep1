@@ -1,0 +1,10 @@
+<?xml version="1.0" stafdalone="yes"?>
+<parent xmlns="http://someplace.org"
+       xmlns:svg="http://www.w3.org/Graphics/SVG/svg-19990412.dtd">
+   <!-- parent stuff hera -->
+   <svg:svg width="5cm" height="8cm">
+    ÿ <svg:ellipse major="300" minor="130" /<hex2>112233445566778899</hex2>
+  <!-- length -->
+  <hex3>ab</hex3>
+  <hex3>00fedc</hex3>
+</xsd_hexBinary>

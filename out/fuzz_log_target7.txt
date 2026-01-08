@@ -1,0 +1,564 @@
+[*] Loading dictionary from: dicts/xml.dict
+[*] Loaded 12 dictionary tokens.
+[*] Loading seeds from: seeds/target7
+[*] Loaded 728 seeds.
+[*] Fuzzing target: target7 | Timeout: 100s
+[*] Strategy: FILE (@@)
+[+] New Path! Cov: 807 | Execs: 1 | Speed: 0.07 execs/s
+[*] Fuzzing test case #1 (stats: map=807, speed=0/s, crashes=0, paths=729)
+[+] New Path! Cov: 864 | Execs: 2 | Speed: 0.14 execs/s
+[*] Fuzzing test case #2 (stats: map=864, speed=0/s, crashes=0, paths=730)
+[+] New Path! Cov: 878 | Execs: 3 | Speed: 0.21 execs/s
+[*] Fuzzing test case #3 (stats: map=878, speed=0/s, crashes=0, paths=731)
+[+] New Path! Cov: 880 | Execs: 5 | Speed: 0.35 execs/s
+[*] Fuzzing test case #5 (stats: map=880, speed=0/s, crashes=0, paths=732)
+[+] New Path! Cov: 1070 | Execs: 6 | Speed: 0.42 execs/s
+[*] Fuzzing test case #6 (stats: map=1070, speed=0/s, crashes=0, paths=733)
+[+] New Path! Cov: 1303 | Execs: 7 | Speed: 0.48 execs/s
+[*] Fuzzing test case #7 (stats: map=1303, speed=0/s, crashes=0, paths=734)
+[+] New Path! Cov: 1304 | Execs: 8 | Speed: 0.55 execs/s
+[*] Fuzzing test case #8 (stats: map=1304, speed=1/s, crashes=0, paths=735)
+[+] New Path! Cov: 1308 | Execs: 9 | Speed: 0.61 execs/s
+[*] Fuzzing test case #9 (stats: map=1308, speed=1/s, crashes=0, paths=736)
+[+] New Path! Cov: 1329 | Execs: 10 | Speed: 0.68 execs/s
+[*] Fuzzing test case #10 (stats: map=1329, speed=1/s, crashes=0, paths=737)
+[+] New Path! Cov: 1412 | Execs: 11 | Speed: 0.74 execs/s
+[*] Fuzzing test case #11 (stats: map=1412, speed=1/s, crashes=0, paths=738)
+[+] New Path! Cov: 1541 | Execs: 12 | Speed: 0.80 execs/s
+[*] Fuzzing test case #12 (stats: map=1541, speed=1/s, crashes=0, paths=739)
+[+] New Path! Cov: 1561 | Execs: 13 | Speed: 0.86 execs/s
+[*] Fuzzing test case #13 (stats: map=1561, speed=1/s, crashes=0, paths=740)
+[+] New Path! Cov: 1564 | Execs: 14 | Speed: 0.92 execs/s
+[*] Fuzzing test case #14 (stats: map=1564, speed=1/s, crashes=0, paths=741)
+[+] New Path! Cov: 1570 | Execs: 15 | Speed: 0.98 execs/s
+[*] Fuzzing test case #15 (stats: map=1570, speed=1/s, crashes=0, paths=742)
+[+] New Path! Cov: 1619 | Execs: 16 | Speed: 1.04 execs/s
+[*] Fuzzing test case #16 (stats: map=1619, speed=1/s, crashes=0, paths=743)
+[+] New Path! Cov: 1651 | Execs: 17 | Speed: 1.10 execs/s
+[*] Fuzzing test case #17 (stats: map=1651, speed=1/s, crashes=0, paths=744)
+[+] New Path! Cov: 1653 | Execs: 18 | Speed: 1.16 execs/s
+[*] Fuzzing test case #18 (stats: map=1653, speed=1/s, crashes=0, paths=745)
+[+] New Path! Cov: 1654 | Execs: 19 | Speed: 1.21 execs/s
+[*] Fuzzing test case #19 (stats: map=1654, speed=1/s, crashes=0, paths=746)
+[+] New Path! Cov: 1658 | Execs: 20 | Speed: 1.27 execs/s
+[*] Fuzzing test case #20 (stats: map=1658, speed=1/s, crashes=0, paths=747)
+[+] New Path! Cov: 1660 | Execs: 21 | Speed: 1.32 execs/s
+[*] Fuzzing test case #21 (stats: map=1660, speed=1/s, crashes=0, paths=748)
+[+] New Path! Cov: 1663 | Execs: 22 | Speed: 1.38 execs/s
+[*] Fuzzing test case #22 (stats: map=1663, speed=1/s, crashes=0, paths=749)
+[+] New Path! Cov: 1665 | Execs: 24 | Speed: 1.49 execs/s
+[*] Fuzzing test case #24 (stats: map=1665, speed=1/s, crashes=0, paths=750)
+[+] New Path! Cov: 1669 | Execs: 26 | Speed: 1.60 execs/s
+[*] Fuzzing test case #26 (stats: map=1669, speed=2/s, crashes=0, paths=751)
+[+] New Path! Cov: 1792 | Execs: 27 | Speed: 1.65 execs/s
+[*] Fuzzing test case #27 (stats: map=1792, speed=2/s, crashes=0, paths=752)
+[+] New Path! Cov: 1822 | Execs: 30 | Speed: 1.81 execs/s
+[*] Fuzzing test case #30 (stats: map=1822, speed=2/s, crashes=0, paths=753)
+[+] New Path! Cov: 1823 | Execs: 31 | Speed: 1.86 execs/s
+[*] Fuzzing test case #31 (stats: map=1823, speed=2/s, crashes=0, paths=754)
+[+] New Path! Cov: 1825 | Execs: 32 | Speed: 1.91 execs/s
+[*] Fuzzing test case #32 (stats: map=1825, speed=2/s, crashes=0, paths=755)
+[+] New Path! Cov: 1878 | Execs: 36 | Speed: 2.12 execs/s
+[*] Fuzzing test case #36 (stats: map=1878, speed=2/s, crashes=0, paths=756)
+[+] New Path! Cov: 1880 | Execs: 37 | Speed: 2.17 execs/s
+[*] Fuzzing test case #37 (stats: map=1880, speed=2/s, crashes=0, paths=757)
+[+] New Path! Cov: 1882 | Execs: 38 | Speed: 2.21 execs/s
+[*] Fuzzing test case #38 (stats: map=1882, speed=2/s, crashes=0, paths=758)
+[+] New Path! Cov: 1904 | Execs: 39 | Speed: 2.25 execs/s
+[*] Fuzzing test case #39 (stats: map=1904, speed=2/s, crashes=0, paths=759)
+[+] New Path! Cov: 1913 | Execs: 40 | Speed: 2.29 execs/s
+[*] Fuzzing test case #40 (stats: map=1913, speed=2/s, crashes=0, paths=760)
+[+] New Path! Cov: 1930 | Execs: 41 | Speed: 2.34 execs/s
+[*] Fuzzing test case #41 (stats: map=1930, speed=2/s, crashes=0, paths=761)
+[+] New Path! Cov: 1955 | Execs: 42 | Speed: 2.38 execs/s
+[*] Fuzzing test case #42 (stats: map=1955, speed=2/s, crashes=0, paths=762)
+[+] New Path! Cov: 1958 | Execs: 43 | Speed: 2.43 execs/s
+[*] Fuzzing test case #43 (stats: map=1958, speed=2/s, crashes=0, paths=763)
+[+] New Path! Cov: 1966 | Execs: 44 | Speed: 2.47 execs/s
+[*] Fuzzing test case #44 (stats: map=1966, speed=2/s, crashes=0, paths=764)
+[+] New Path! Cov: 1968 | Execs: 48 | Speed: 2.66 execs/s
+[*] Fuzzing test case #48 (stats: map=1968, speed=3/s, crashes=0, paths=765)
+[+] New Path! Cov: 1974 | Execs: 49 | Speed: 2.70 execs/s
+[*] Fuzzing test case #49 (stats: map=1974, speed=3/s, crashes=0, paths=766)
+[+] New Path! Cov: 2021 | Execs: 50 | Speed: 2.74 execs/s
+[*] Fuzzing test case #50 (stats: map=2021, speed=3/s, crashes=0, paths=767)
+[+] New Path! Cov: 2047 | Execs: 53 | Speed: 2.88 execs/s
+[*] Fuzzing test case #53 (stats: map=2047, speed=3/s, crashes=0, paths=768)
+[+] New Path! Cov: 2049 | Execs: 55 | Speed: 2.96 execs/s
+[*] Fuzzing test case #55 (stats: map=2049, speed=3/s, crashes=0, paths=769)
+[+] New Path! Cov: 2050 | Execs: 57 | Speed: 3.04 execs/s
+[*] Fuzzing test case #57 (stats: map=2050, speed=3/s, crashes=0, paths=770)
+[+] New Path! Cov: 2052 | Execs: 58 | Speed: 3.08 execs/s
+[*] Fuzzing test case #58 (stats: map=2052, speed=3/s, crashes=0, paths=771)
+[+] New Path! Cov: 2053 | Execs: 61 | Speed: 3.20 execs/s
+[*] Fuzzing test case #61 (stats: map=2053, speed=3/s, crashes=0, paths=772)
+[+] New Path! Cov: 2054 | Execs: 62 | Speed: 3.23 execs/s
+[*] Fuzzing test case #62 (stats: map=2054, speed=3/s, crashes=0, paths=773)
+[+] New Path! Cov: 2056 | Execs: 63 | Speed: 3.27 execs/s
+[*] Fuzzing test case #63 (stats: map=2056, speed=3/s, crashes=0, paths=774)
+[+] New Path! Cov: 2061 | Execs: 67 | Speed: 3.44 execs/s
+[*] Fuzzing test case #67 (stats: map=2061, speed=3/s, crashes=0, paths=775)
+[+] New Path! Cov: 2064 | Execs: 70 | Speed: 3.56 execs/s
+[*] Fuzzing test case #70 (stats: map=2064, speed=4/s, crashes=0, paths=776)
+[+] New Path! Cov: 2065 | Execs: 78 | Speed: 3.88 execs/s
+[*] Fuzzing test case #78 (stats: map=2065, speed=4/s, crashes=0, paths=777)
+[+] New Path! Cov: 2074 | Execs: 85 | Speed: 4.15 execs/s
+[*] Fuzzing test case #85 (stats: map=2074, speed=4/s, crashes=0, paths=778)
+[+] New Path! Cov: 2104 | Execs: 87 | Speed: 4.22 execs/s
+[*] Fuzzing test case #87 (stats: map=2104, speed=4/s, crashes=0, paths=779)
+[+] New Path! Cov: 2106 | Execs: 90 | Speed: 4.32 execs/s
+[*] Fuzzing test case #90 (stats: map=2106, speed=4/s, crashes=0, paths=780)
+[+] New Path! Cov: 2107 | Execs: 91 | Speed: 4.35 execs/s
+[*] Fuzzing test case #91 (stats: map=2107, speed=4/s, crashes=0, paths=781)
+[+] New Path! Cov: 2112 | Execs: 94 | Speed: 4.45 execs/s
+[*] Fuzzing test case #94 (stats: map=2112, speed=4/s, crashes=0, paths=782)
+[+] New Path! Cov: 2113 | Execs: 96 | Speed: 4.52 execs/s
+[*] Fuzzing test case #96 (stats: map=2113, speed=5/s, crashes=0, paths=783)
+[+] New Path! Cov: 2114 | Execs: 98 | Speed: 4.58 execs/s
+[*] Fuzzing test case #98 (stats: map=2114, speed=5/s, crashes=0, paths=784)
+[+] New Path! Cov: 2115 | Execs: 104 | Speed: 4.79 execs/s
+[*] Fuzzing test case #104 (stats: map=2115, speed=5/s, crashes=0, paths=785)
+[+] New Path! Cov: 2128 | Execs: 109 | Speed: 4.96 execs/s
+[*] Fuzzing test case #109 (stats: map=2128, speed=5/s, crashes=0, paths=786)
+[+] New Path! Cov: 2132 | Execs: 110 | Speed: 4.98 execs/s
+[*] Fuzzing test case #110 (stats: map=2132, speed=5/s, crashes=0, paths=787)
+[+] New Path! Cov: 2140 | Execs: 113 | Speed: 5.08 execs/s
+[*] Fuzzing test case #113 (stats: map=2140, speed=5/s, crashes=0, paths=788)
+[+] New Path! Cov: 2169 | Execs: 115 | Speed: 5.13 execs/s
+[*] Fuzzing test case #115 (stats: map=2169, speed=5/s, crashes=0, paths=789)
+[+] New Path! Cov: 2188 | Execs: 116 | Speed: 5.16 execs/s
+[*] Fuzzing test case #116 (stats: map=2188, speed=5/s, crashes=0, paths=790)
+[+] New Path! Cov: 2190 | Execs: 119 | Speed: 5.24 execs/s
+[*] Fuzzing test case #119 (stats: map=2190, speed=5/s, crashes=0, paths=791)
+[+] New Path! Cov: 2197 | Execs: 120 | Speed: 5.26 execs/s
+[*] Fuzzing test case #120 (stats: map=2197, speed=5/s, crashes=0, paths=792)
+[+] New Path! Cov: 2226 | Execs: 121 | Speed: 5.28 execs/s
+[*] Fuzzing test case #121 (stats: map=2226, speed=5/s, crashes=0, paths=793)
+[+] New Path! Cov: 2245 | Execs: 123 | Speed: 5.34 execs/s
+[*] Fuzzing test case #123 (stats: map=2245, speed=5/s, crashes=0, paths=794)
+[+] New Path! Cov: 2246 | Execs: 125 | Speed: 5.39 execs/s
+[*] Fuzzing test case #125 (stats: map=2246, speed=5/s, crashes=0, paths=795)
+[+] New Path! Cov: 2247 | Execs: 126 | Speed: 5.40 execs/s
+[*] Fuzzing test case #126 (stats: map=2247, speed=5/s, crashes=0, paths=796)
+[+] New Path! Cov: 2394 | Execs: 129 | Speed: 5.48 execs/s
+[*] Fuzzing test case #129 (stats: map=2394, speed=5/s, crashes=0, paths=797)
+[+] New Path! Cov: 2413 | Execs: 130 | Speed: 5.50 execs/s
+[*] Fuzzing test case #130 (stats: map=2413, speed=5/s, crashes=0, paths=798)
+[+] New Path! Cov: 2415 | Execs: 131 | Speed: 5.52 execs/s
+[*] Fuzzing test case #131 (stats: map=2415, speed=6/s, crashes=0, paths=799)
+[+] New Path! Cov: 2416 | Execs: 132 | Speed: 5.54 execs/s
+[*] Fuzzing test case #132 (stats: map=2416, speed=6/s, crashes=0, paths=800)
+[+] New Path! Cov: 2417 | Execs: 133 | Speed: 5.56 execs/s
+[*] Fuzzing test case #133 (stats: map=2417, speed=6/s, crashes=0, paths=801)
+[+] New Path! Cov: 2418 | Execs: 134 | Speed: 5.57 execs/s
+[*] Fuzzing test case #134 (stats: map=2418, speed=6/s, crashes=0, paths=802)
+[+] New Path! Cov: 2422 | Execs: 135 | Speed: 5.59 execs/s
+[*] Fuzzing test case #135 (stats: map=2422, speed=6/s, crashes=0, paths=803)
+[+] New Path! Cov: 2437 | Execs: 137 | Speed: 5.65 execs/s
+[*] Fuzzing test case #137 (stats: map=2437, speed=6/s, crashes=0, paths=804)
+[+] New Path! Cov: 2438 | Execs: 145 | Speed: 5.88 execs/s
+[*] Fuzzing test case #145 (stats: map=2438, speed=6/s, crashes=0, paths=805)
+[+] New Path! Cov: 2439 | Execs: 149 | Speed: 5.99 execs/s
+[*] Fuzzing test case #149 (stats: map=2439, speed=6/s, crashes=0, paths=806)
+[+] New Path! Cov: 2440 | Execs: 150 | Speed: 6.01 execs/s
+[*] Fuzzing test case #150 (stats: map=2440, speed=6/s, crashes=0, paths=807)
+[+] New Path! Cov: 2457 | Execs: 157 | Speed: 6.21 execs/s
+[*] Fuzzing test case #157 (stats: map=2457, speed=6/s, crashes=0, paths=808)
+[+] New Path! Cov: 2460 | Execs: 160 | Speed: 6.28 execs/s
+[*] Fuzzing test case #160 (stats: map=2460, speed=6/s, crashes=0, paths=809)
+[+] New Path! Cov: 2462 | Execs: 161 | Speed: 6.30 execs/s
+[*] Fuzzing test case #161 (stats: map=2462, speed=6/s, crashes=0, paths=810)
+[+] New Path! Cov: 2514 | Execs: 162 | Speed: 6.31 execs/s
+[*] Fuzzing test case #162 (stats: map=2514, speed=6/s, crashes=0, paths=811)
+[+] New Path! Cov: 2515 | Execs: 163 | Speed: 6.33 execs/s
+[*] Fuzzing test case #163 (stats: map=2515, speed=6/s, crashes=0, paths=812)
+[+] New Path! Cov: 2531 | Execs: 164 | Speed: 6.35 execs/s
+[*] Fuzzing test case #164 (stats: map=2531, speed=6/s, crashes=0, paths=813)
+[+] New Path! Cov: 2533 | Execs: 165 | Speed: 6.36 execs/s
+[*] Fuzzing test case #165 (stats: map=2533, speed=6/s, crashes=0, paths=814)
+[+] New Path! Cov: 2538 | Execs: 166 | Speed: 6.37 execs/s
+[*] Fuzzing test case #166 (stats: map=2538, speed=6/s, crashes=0, paths=815)
+[+] New Path! Cov: 2539 | Execs: 167 | Speed: 6.39 execs/s
+[*] Fuzzing test case #167 (stats: map=2539, speed=6/s, crashes=0, paths=816)
+[+] New Path! Cov: 2543 | Execs: 170 | Speed: 6.46 execs/s
+[*] Fuzzing test case #170 (stats: map=2543, speed=6/s, crashes=0, paths=817)
+[+] New Path! Cov: 2554 | Execs: 172 | Speed: 6.50 execs/s
+[*] Fuzzing test case #172 (stats: map=2554, speed=6/s, crashes=0, paths=818)
+[+] New Path! Cov: 2557 | Execs: 173 | Speed: 6.51 execs/s
+[*] Fuzzing test case #173 (stats: map=2557, speed=7/s, crashes=0, paths=819)
+[+] New Path! Cov: 2558 | Execs: 178 | Speed: 6.62 execs/s
+[*] Fuzzing test case #178 (stats: map=2558, speed=7/s, crashes=0, paths=820)
+[+] New Path! Cov: 2563 | Execs: 185 | Speed: 6.78 execs/s
+[*] Fuzzing test case #185 (stats: map=2563, speed=7/s, crashes=0, paths=821)
+[+] New Path! Cov: 2565 | Execs: 186 | Speed: 6.79 execs/s
+[*] Fuzzing test case #186 (stats: map=2565, speed=7/s, crashes=0, paths=822)
+[+] New Path! Cov: 2568 | Execs: 201 | Speed: 7.14 execs/s
+[*] Fuzzing test case #201 (stats: map=2568, speed=7/s, crashes=0, paths=823)
+[+] New Path! Cov: 2569 | Execs: 203 | Speed: 7.18 execs/s
+[*] Fuzzing test case #203 (stats: map=2569, speed=7/s, crashes=0, paths=824)
+[+] New Path! Cov: 2573 | Execs: 206 | Speed: 7.24 execs/s
+[*] Fuzzing test case #206 (stats: map=2573, speed=7/s, crashes=0, paths=825)
+[+] New Path! Cov: 2575 | Execs: 212 | Speed: 7.36 execs/s
+[*] Fuzzing test case #212 (stats: map=2575, speed=7/s, crashes=0, paths=826)
+[+] New Path! Cov: 2576 | Execs: 213 | Speed: 7.37 execs/s
+[*] Fuzzing test case #213 (stats: map=2576, speed=7/s, crashes=0, paths=827)
+[+] New Path! Cov: 2578 | Execs: 218 | Speed: 7.47 execs/s
+[*] Fuzzing test case #218 (stats: map=2578, speed=7/s, crashes=0, paths=828)
+[+] New Path! Cov: 2581 | Execs: 219 | Speed: 7.48 execs/s
+[*] Fuzzing test case #219 (stats: map=2581, speed=7/s, crashes=0, paths=829)
+[+] New Path! Cov: 2582 | Execs: 220 | Speed: 7.48 execs/s
+[*] Fuzzing test case #220 (stats: map=2582, speed=7/s, crashes=0, paths=830)
+[+] New Path! Cov: 2585 | Execs: 222 | Speed: 7.51 execs/s
+[*] Fuzzing test case #222 (stats: map=2585, speed=8/s, crashes=0, paths=831)
+[+] New Path! Cov: 2586 | Execs: 225 | Speed: 7.56 execs/s
+[*] Fuzzing test case #225 (stats: map=2586, speed=8/s, crashes=0, paths=832)
+[+] New Path! Cov: 2590 | Execs: 227 | Speed: 7.58 execs/s
+[*] Fuzzing test case #227 (stats: map=2590, speed=8/s, crashes=0, paths=833)
+[+] New Path! Cov: 2592 | Execs: 229 | Speed: 7.61 execs/s
+[*] Fuzzing test case #229 (stats: map=2592, speed=8/s, crashes=0, paths=834)
+[+] New Path! Cov: 2593 | Execs: 231 | Speed: 7.64 execs/s
+[*] Fuzzing test case #231 (stats: map=2593, speed=8/s, crashes=0, paths=835)
+[+] New Path! Cov: 2595 | Execs: 233 | Speed: 7.67 execs/s
+[*] Fuzzing test case #233 (stats: map=2595, speed=8/s, crashes=0, paths=836)
+[+] New Path! Cov: 2597 | Execs: 246 | Speed: 7.91 execs/s
+[*] Fuzzing test case #246 (stats: map=2597, speed=8/s, crashes=0, paths=837)
+[+] New Path! Cov: 2599 | Execs: 249 | Speed: 7.96 execs/s
+[*] Fuzzing test case #249 (stats: map=2599, speed=8/s, crashes=0, paths=838)
+[+] New Path! Cov: 2600 | Execs: 250 | Speed: 7.97 execs/s
+[*] Fuzzing test case #250 (stats: map=2600, speed=8/s, crashes=0, paths=839)
+[+] New Path! Cov: 2601 | Execs: 252 | Speed: 8.00 execs/s
+[*] Fuzzing test case #252 (stats: map=2601, speed=8/s, crashes=0, paths=840)
+[+] New Path! Cov: 2605 | Execs: 258 | Speed: 8.10 execs/s
+[*] Fuzzing test case #258 (stats: map=2605, speed=8/s, crashes=0, paths=841)
+[+] New Path! Cov: 2606 | Execs: 259 | Speed: 8.10 execs/s
+[*] Fuzzing test case #259 (stats: map=2606, speed=8/s, crashes=0, paths=842)
+[+] New Path! Cov: 2608 | Execs: 260 | Speed: 8.10 execs/s
+[*] Fuzzing test case #260 (stats: map=2608, speed=8/s, crashes=0, paths=843)
+[+] New Path! Cov: 2611 | Execs: 261 | Speed: 8.11 execs/s
+[*] Fuzzing test case #261 (stats: map=2611, speed=8/s, crashes=0, paths=844)
+[+] New Path! Cov: 2652 | Execs: 264 | Speed: 8.14 execs/s
+[*] Fuzzing test case #264 (stats: map=2652, speed=8/s, crashes=0, paths=845)
+[+] New Path! Cov: 2659 | Execs: 265 | Speed: 8.15 execs/s
+[*] Fuzzing test case #265 (stats: map=2659, speed=8/s, crashes=0, paths=846)
+[+] New Path! Cov: 2665 | Execs: 267 | Speed: 8.17 execs/s
+[*] Fuzzing test case #267 (stats: map=2665, speed=8/s, crashes=0, paths=847)
+[+] New Path! Cov: 2667 | Execs: 274 | Speed: 8.28 execs/s
+[*] Fuzzing test case #274 (stats: map=2667, speed=8/s, crashes=0, paths=848)
+[+] New Path! Cov: 2668 | Execs: 275 | Speed: 8.29 execs/s
+[*] Fuzzing test case #275 (stats: map=2668, speed=8/s, crashes=0, paths=849)
+[+] New Path! Cov: 2669 | Execs: 276 | Speed: 8.29 execs/s
+[*] Fuzzing test case #276 (stats: map=2669, speed=8/s, crashes=0, paths=850)
+[+] New Path! Cov: 2670 | Execs: 284 | Speed: 8.41 execs/s
+[*] Fuzzing test case #284 (stats: map=2670, speed=8/s, crashes=0, paths=851)
+[+] New Path! Cov: 2672 | Execs: 286 | Speed: 8.44 execs/s
+[*] Fuzzing test case #286 (stats: map=2672, speed=8/s, crashes=0, paths=852)
+[+] New Path! Cov: 2673 | Execs: 292 | Speed: 8.53 execs/s
+[*] Fuzzing test case #292 (stats: map=2673, speed=9/s, crashes=0, paths=853)
+[+] New Path! Cov: 2675 | Execs: 294 | Speed: 8.56 execs/s
+[*] Fuzzing test case #294 (stats: map=2675, speed=9/s, crashes=0, paths=854)
+[+] New Path! Cov: 2679 | Execs: 302 | Speed: 8.71 execs/s
+[*] Fuzzing test case #302 (stats: map=2679, speed=9/s, crashes=0, paths=855)
+[+] New Path! Cov: 2681 | Execs: 303 | Speed: 8.71 execs/s
+[*] Fuzzing test case #303 (stats: map=2681, speed=9/s, crashes=0, paths=856)
+[+] New Path! Cov: 2682 | Execs: 308 | Speed: 8.80 execs/s
+[*] Fuzzing test case #308 (stats: map=2682, speed=9/s, crashes=0, paths=857)
+[+] New Path! Cov: 2683 | Execs: 315 | Speed: 8.92 execs/s
+[*] Fuzzing test case #315 (stats: map=2683, speed=9/s, crashes=0, paths=858)
+[+] New Path! Cov: 2686 | Execs: 320 | Speed: 9.00 execs/s
+[*] Fuzzing test case #320 (stats: map=2686, speed=9/s, crashes=0, paths=859)
+[+] New Path! Cov: 2687 | Execs: 322 | Speed: 9.02 execs/s
+[*] Fuzzing test case #322 (stats: map=2687, speed=9/s, crashes=0, paths=860)
+[+] New Path! Cov: 2688 | Execs: 329 | Speed: 9.11 execs/s
+[*] Fuzzing test case #329 (stats: map=2688, speed=9/s, crashes=0, paths=861)
+[+] New Path! Cov: 2689 | Execs: 333 | Speed: 9.17 execs/s
+[*] Fuzzing test case #333 (stats: map=2689, speed=9/s, crashes=0, paths=862)
+[+] New Path! Cov: 2690 | Execs: 337 | Speed: 9.23 execs/s
+[*] Fuzzing test case #337 (stats: map=2690, speed=9/s, crashes=0, paths=863)
+[+] New Path! Cov: 2724 | Execs: 339 | Speed: 9.25 execs/s
+[*] Fuzzing test case #339 (stats: map=2724, speed=9/s, crashes=0, paths=864)
+[+] New Path! Cov: 2726 | Execs: 341 | Speed: 9.27 execs/s
+[*] Fuzzing test case #341 (stats: map=2726, speed=9/s, crashes=0, paths=865)
+[+] New Path! Cov: 2739 | Execs: 342 | Speed: 9.27 execs/s
+[*] Fuzzing test case #342 (stats: map=2739, speed=9/s, crashes=0, paths=866)
+[+] New Path! Cov: 2740 | Execs: 358 | Speed: 9.50 execs/s
+[*] Fuzzing test case #358 (stats: map=2740, speed=10/s, crashes=0, paths=867)
+[+] New Path! Cov: 2744 | Execs: 372 | Speed: 9.69 execs/s
+[*] Fuzzing test case #372 (stats: map=2744, speed=10/s, crashes=0, paths=868)
+[+] New Path! Cov: 2745 | Execs: 373 | Speed: 9.70 execs/s
+[*] Fuzzing test case #373 (stats: map=2745, speed=10/s, crashes=0, paths=869)
+[+] New Path! Cov: 2746 | Execs: 382 | Speed: 9.80 execs/s
+[*] Fuzzing test case #382 (stats: map=2746, speed=10/s, crashes=0, paths=870)
+[+] New Path! Cov: 2748 | Execs: 383 | Speed: 9.80 execs/s
+[*] Fuzzing test case #383 (stats: map=2748, speed=10/s, crashes=0, paths=871)
+[+] New Path! Cov: 2749 | Execs: 385 | Speed: 9.81 execs/s
+[*] Fuzzing test case #385 (stats: map=2749, speed=10/s, crashes=0, paths=872)
+[+] New Path! Cov: 2752 | Execs: 393 | Speed: 9.91 execs/s
+[*] Fuzzing test case #393 (stats: map=2752, speed=10/s, crashes=0, paths=873)
+[+] New Path! Cov: 2753 | Execs: 394 | Speed: 9.91 execs/s
+[*] Fuzzing test case #394 (stats: map=2753, speed=10/s, crashes=0, paths=874)
+[+] New Path! Cov: 2754 | Execs: 396 | Speed: 9.92 execs/s
+[*] Fuzzing test case #396 (stats: map=2754, speed=10/s, crashes=0, paths=875)
+[+] New Path! Cov: 2759 | Execs: 407 | Speed: 10.07 execs/s
+[*] Fuzzing test case #407 (stats: map=2759, speed=10/s, crashes=0, paths=876)
+[+] New Path! Cov: 2760 | Execs: 412 | Speed: 10.13 execs/s
+[*] Fuzzing test case #412 (stats: map=2760, speed=10/s, crashes=0, paths=877)
+[*] Fuzzing test case #437 (stats: map=2760, speed=10/s, crashes=0, paths=877)
+[+] New Path! Cov: 2762 | Execs: 457 | Speed: 10.68 execs/s
+[*] Fuzzing test case #457 (stats: map=2762, speed=11/s, crashes=0, paths=878)
+[+] New Path! Cov: 2763 | Execs: 459 | Speed: 10.69 execs/s
+[*] Fuzzing test case #459 (stats: map=2763, speed=11/s, crashes=0, paths=879)
+[+] New Path! Cov: 2764 | Execs: 461 | Speed: 10.69 execs/s
+[*] Fuzzing test case #461 (stats: map=2764, speed=11/s, crashes=0, paths=880)
+[+] New Path! Cov: 2775 | Execs: 462 | Speed: 10.69 execs/s
+[*] Fuzzing test case #462 (stats: map=2775, speed=11/s, crashes=0, paths=881)
+[+] New Path! Cov: 2779 | Execs: 463 | Speed: 10.69 execs/s
+[*] Fuzzing test case #463 (stats: map=2779, speed=11/s, crashes=0, paths=882)
+[+] New Path! Cov: 2780 | Execs: 465 | Speed: 10.70 execs/s
+[*] Fuzzing test case #465 (stats: map=2780, speed=11/s, crashes=0, paths=883)
+[+] New Path! Cov: 2788 | Execs: 468 | Speed: 10.71 execs/s
+[*] Fuzzing test case #468 (stats: map=2788, speed=11/s, crashes=0, paths=884)
+[+] New Path! Cov: 2792 | Execs: 469 | Speed: 10.72 execs/s
+[*] Fuzzing test case #469 (stats: map=2792, speed=11/s, crashes=0, paths=885)
+[+] New Path! Cov: 2794 | Execs: 471 | Speed: 10.73 execs/s
+[*] Fuzzing test case #471 (stats: map=2794, speed=11/s, crashes=0, paths=886)
+[+] New Path! Cov: 2795 | Execs: 482 | Speed: 10.84 execs/s
+[*] Fuzzing test case #482 (stats: map=2795, speed=11/s, crashes=0, paths=887)
+[+] New Path! Cov: 2805 | Execs: 484 | Speed: 10.85 execs/s
+[*] Fuzzing test case #484 (stats: map=2805, speed=11/s, crashes=0, paths=888)
+[+] New Path! Cov: 2807 | Execs: 487 | Speed: 10.86 execs/s
+[*] Fuzzing test case #487 (stats: map=2807, speed=11/s, crashes=0, paths=889)
+[+] New Path! Cov: 2810 | Execs: 491 | Speed: 10.89 execs/s
+[*] Fuzzing test case #491 (stats: map=2810, speed=11/s, crashes=0, paths=890)
+[+] New Path! Cov: 2812 | Execs: 500 | Speed: 11.00 execs/s
+[*] Fuzzing test case #500 (stats: map=2812, speed=11/s, crashes=0, paths=891)
+[+] New Path! Cov: 2814 | Execs: 503 | Speed: 11.02 execs/s
+[*] Fuzzing test case #503 (stats: map=2814, speed=11/s, crashes=0, paths=892)
+[+] New Path! Cov: 2815 | Execs: 507 | Speed: 11.04 execs/s
+[*] Fuzzing test case #507 (stats: map=2815, speed=11/s, crashes=0, paths=893)
+[+] New Path! Cov: 2816 | Execs: 509 | Speed: 11.04 execs/s
+[*] Fuzzing test case #509 (stats: map=2816, speed=11/s, crashes=0, paths=894)
+[+] New Path! Cov: 2818 | Execs: 515 | Speed: 11.09 execs/s
+[*] Fuzzing test case #515 (stats: map=2818, speed=11/s, crashes=0, paths=895)
+[+] New Path! Cov: 2819 | Execs: 524 | Speed: 11.19 execs/s
+[*] Fuzzing test case #524 (stats: map=2819, speed=11/s, crashes=0, paths=896)
+[+] New Path! Cov: 2822 | Execs: 527 | Speed: 11.20 execs/s
+[*] Fuzzing test case #527 (stats: map=2822, speed=11/s, crashes=0, paths=897)
+[+] New Path! Cov: 2825 | Execs: 531 | Speed: 11.23 execs/s
+[*] Fuzzing test case #531 (stats: map=2825, speed=11/s, crashes=0, paths=898)
+[+] New Path! Cov: 2826 | Execs: 533 | Speed: 11.24 execs/s
+[*] Fuzzing test case #533 (stats: map=2826, speed=11/s, crashes=0, paths=899)
+[+] New Path! Cov: 2828 | Execs: 534 | Speed: 11.23 execs/s
+[*] Fuzzing test case #534 (stats: map=2828, speed=11/s, crashes=0, paths=900)
+[+] New Path! Cov: 2830 | Execs: 535 | Speed: 11.22 execs/s
+[*] Fuzzing test case #535 (stats: map=2830, speed=11/s, crashes=0, paths=901)
+[+] New Path! Cov: 2945 | Execs: 540 | Speed: 11.27 execs/s
+[*] Fuzzing test case #540 (stats: map=2945, speed=11/s, crashes=0, paths=902)
+[+] New Path! Cov: 2946 | Execs: 543 | Speed: 11.29 execs/s
+[*] Fuzzing test case #543 (stats: map=2946, speed=11/s, crashes=0, paths=903)
+[*] Fuzzing test case #566 (stats: map=2946, speed=12/s, crashes=0, paths=903)
+[+] New Path! Cov: 2948 | Execs: 580 | Speed: 11.64 execs/s
+[*] Fuzzing test case #580 (stats: map=2948, speed=12/s, crashes=0, paths=904)
+[+] New Path! Cov: 2949 | Execs: 591 | Speed: 11.72 execs/s
+[*] Fuzzing test case #591 (stats: map=2949, speed=12/s, crashes=0, paths=905)
+[+] New Path! Cov: 2950 | Execs: 598 | Speed: 11.78 execs/s
+[*] Fuzzing test case #598 (stats: map=2950, speed=12/s, crashes=0, paths=906)
+[+] New Path! Cov: 2951 | Execs: 603 | Speed: 11.81 execs/s
+[*] Fuzzing test case #603 (stats: map=2951, speed=12/s, crashes=0, paths=907)
+[*] Fuzzing test case #626 (stats: map=2951, speed=12/s, crashes=0, paths=907)
+[+] New Path! Cov: 2952 | Execs: 644 | Speed: 12.16 execs/s
+[*] Fuzzing test case #644 (stats: map=2952, speed=12/s, crashes=0, paths=908)
+[+] New Path! Cov: 2953 | Execs: 651 | Speed: 12.22 execs/s
+[*] Fuzzing test case #651 (stats: map=2953, speed=12/s, crashes=0, paths=909)
+[+] New Path! Cov: 2955 | Execs: 657 | Speed: 12.26 execs/s
+[*] Fuzzing test case #657 (stats: map=2955, speed=12/s, crashes=0, paths=910)
+[+] New Path! Cov: 2985 | Execs: 668 | Speed: 12.35 execs/s
+[*] Fuzzing test case #668 (stats: map=2985, speed=12/s, crashes=0, paths=911)
+[+] New Path! Cov: 2986 | Execs: 670 | Speed: 12.36 execs/s
+[*] Fuzzing test case #670 (stats: map=2986, speed=12/s, crashes=0, paths=912)
+[+] New Path! Cov: 2987 | Execs: 691 | Speed: 12.52 execs/s
+[*] Fuzzing test case #691 (stats: map=2987, speed=13/s, crashes=0, paths=913)
+[+] New Path! Cov: 2988 | Execs: 713 | Speed: 12.67 execs/s
+[*] Fuzzing test case #713 (stats: map=2988, speed=13/s, crashes=0, paths=914)
+[*] Fuzzing test case #736 (stats: map=2988, speed=13/s, crashes=0, paths=914)
+[+] New Path! Cov: 2989 | Execs: 755 | Speed: 12.97 execs/s
+[*] Fuzzing test case #755 (stats: map=2989, speed=13/s, crashes=0, paths=915)
+[+] New Path! Cov: 2990 | Execs: 763 | Speed: 13.02 execs/s
+[*] Fuzzing test case #763 (stats: map=2990, speed=13/s, crashes=0, paths=916)
+[+] New Path! Cov: 2992 | Execs: 764 | Speed: 13.02 execs/s
+[*] Fuzzing test case #764 (stats: map=2992, speed=13/s, crashes=0, paths=917)
+[+] New Path! Cov: 2993 | Execs: 773 | Speed: 13.07 execs/s
+[*] Fuzzing test case #773 (stats: map=2993, speed=13/s, crashes=0, paths=918)
+[+] New Path! Cov: 2996 | Execs: 774 | Speed: 13.07 execs/s
+[*] Fuzzing test case #774 (stats: map=2996, speed=13/s, crashes=0, paths=919)
+[+] New Path! Cov: 3033 | Execs: 775 | Speed: 13.06 execs/s
+[*] Fuzzing test case #775 (stats: map=3033, speed=13/s, crashes=0, paths=920)
+[+] New Path! Cov: 3035 | Execs: 776 | Speed: 13.05 execs/s
+[*] Fuzzing test case #776 (stats: map=3035, speed=13/s, crashes=0, paths=921)
+[+] New Path! Cov: 3047 | Execs: 777 | Speed: 13.05 execs/s
+[*] Fuzzing test case #777 (stats: map=3047, speed=13/s, crashes=0, paths=922)
+[+] New Path! Cov: 3048 | Execs: 778 | Speed: 13.05 execs/s
+[*] Fuzzing test case #778 (stats: map=3048, speed=13/s, crashes=0, paths=923)
+[+] New Path! Cov: 3049 | Execs: 789 | Speed: 13.11 execs/s
+[*] Fuzzing test case #789 (stats: map=3049, speed=13/s, crashes=0, paths=924)
+[+] New Path! Cov: 3051 | Execs: 792 | Speed: 13.12 execs/s
+[*] Fuzzing test case #792 (stats: map=3051, speed=13/s, crashes=0, paths=925)
+[+] New Path! Cov: 3052 | Execs: 794 | Speed: 13.12 execs/s
+[*] Fuzzing test case #794 (stats: map=3052, speed=13/s, crashes=0, paths=926)
+[*] Fuzzing test case #818 (stats: map=3052, speed=13/s, crashes=0, paths=926)
+[+] New Path! Cov: 3053 | Execs: 823 | Speed: 13.30 execs/s
+[*] Fuzzing test case #823 (stats: map=3053, speed=13/s, crashes=0, paths=927)
+[+] New Path! Cov: 3055 | Execs: 824 | Speed: 13.29 execs/s
+[*] Fuzzing test case #824 (stats: map=3055, speed=13/s, crashes=0, paths=928)
+[+] New Path! Cov: 3105 | Execs: 828 | Speed: 13.30 execs/s
+[*] Fuzzing test case #828 (stats: map=3105, speed=13/s, crashes=0, paths=929)
+[+] New Path! Cov: 3127 | Execs: 829 | Speed: 13.30 execs/s
+[*] Fuzzing test case #829 (stats: map=3127, speed=13/s, crashes=0, paths=930)
+[+] New Path! Cov: 3177 | Execs: 830 | Speed: 13.30 execs/s
+[*] Fuzzing test case #830 (stats: map=3177, speed=13/s, crashes=0, paths=931)
+[*] Fuzzing test case #854 (stats: map=3177, speed=13/s, crashes=0, paths=931)
+[+] New Path! Cov: 3178 | Execs: 861 | Speed: 13.48 execs/s
+[*] Fuzzing test case #861 (stats: map=3178, speed=13/s, crashes=0, paths=932)
+[+] New Path! Cov: 3179 | Execs: 866 | Speed: 13.49 execs/s
+[*] Fuzzing test case #866 (stats: map=3179, speed=13/s, crashes=0, paths=933)
+[*] Fuzzing test case #890 (stats: map=3179, speed=14/s, crashes=0, paths=933)
+[+] New Path! Cov: 3182 | Execs: 892 | Speed: 13.64 execs/s
+[*] Fuzzing test case #892 (stats: map=3182, speed=14/s, crashes=0, paths=934)
+[+] New Path! Cov: 3183 | Execs: 903 | Speed: 13.70 execs/s
+[*] Fuzzing test case #903 (stats: map=3183, speed=14/s, crashes=0, paths=935)
+[+] New Path! Cov: 3184 | Execs: 904 | Speed: 13.70 execs/s
+[*] Fuzzing test case #904 (stats: map=3184, speed=14/s, crashes=0, paths=936)
+[+] New Path! Cov: 3185 | Execs: 906 | Speed: 13.70 execs/s
+[*] Fuzzing test case #906 (stats: map=3185, speed=14/s, crashes=0, paths=937)
+[+] New Path! Cov: 3195 | Execs: 907 | Speed: 13.70 execs/s
+[*] Fuzzing test case #907 (stats: map=3195, speed=14/s, crashes=0, paths=938)
+[+] New Path! Cov: 3196 | Execs: 910 | Speed: 13.71 execs/s
+[*] Fuzzing test case #910 (stats: map=3196, speed=14/s, crashes=0, paths=939)
+[+] New Path! Cov: 3202 | Execs: 914 | Speed: 13.72 execs/s
+[*] Fuzzing test case #914 (stats: map=3202, speed=14/s, crashes=0, paths=940)
+[+] New Path! Cov: 3203 | Execs: 915 | Speed: 13.71 execs/s
+[*] Fuzzing test case #915 (stats: map=3203, speed=14/s, crashes=0, paths=941)
+[+] New Path! Cov: 3205 | Execs: 916 | Speed: 13.71 execs/s
+[*] Fuzzing test case #916 (stats: map=3205, speed=14/s, crashes=0, paths=942)
+[+] New Path! Cov: 3206 | Execs: 918 | Speed: 13.71 execs/s
+[*] Fuzzing test case #918 (stats: map=3206, speed=14/s, crashes=0, paths=943)
+[+] New Path! Cov: 3230 | Execs: 927 | Speed: 13.76 execs/s
+[*] Fuzzing test case #927 (stats: map=3230, speed=14/s, crashes=0, paths=944)
+[+] New Path! Cov: 3231 | Execs: 937 | Speed: 13.81 execs/s
+[*] Fuzzing test case #937 (stats: map=3231, speed=14/s, crashes=0, paths=945)
+[+] New Path! Cov: 3232 | Execs: 954 | Speed: 13.90 execs/s
+[*] Fuzzing test case #954 (stats: map=3232, speed=14/s, crashes=0, paths=946)
+[+] New Path! Cov: 3234 | Execs: 956 | Speed: 13.90 execs/s
+[*] Fuzzing test case #956 (stats: map=3234, speed=14/s, crashes=0, paths=947)
+[+] New Path! Cov: 3235 | Execs: 961 | Speed: 13.92 execs/s
+[*] Fuzzing test case #961 (stats: map=3235, speed=14/s, crashes=0, paths=948)
+[+] New Path! Cov: 3236 | Execs: 964 | Speed: 13.92 execs/s
+[*] Fuzzing test case #964 (stats: map=3236, speed=14/s, crashes=0, paths=949)
+[+] New Path! Cov: 3242 | Execs: 966 | Speed: 13.92 execs/s
+[*] Fuzzing test case #966 (stats: map=3242, speed=14/s, crashes=0, paths=950)
+[+] New Path! Cov: 3244 | Execs: 968 | Speed: 13.92 execs/s
+[*] Fuzzing test case #968 (stats: map=3244, speed=14/s, crashes=0, paths=951)
+[+] New Path! Cov: 3245 | Execs: 974 | Speed: 13.95 execs/s
+[*] Fuzzing test case #974 (stats: map=3245, speed=14/s, crashes=0, paths=952)
+[+] New Path! Cov: 3247 | Execs: 985 | Speed: 14.00 execs/s
+[*] Fuzzing test case #985 (stats: map=3247, speed=14/s, crashes=0, paths=953)
+[+] New Path! Cov: 3251 | Execs: 991 | Speed: 14.02 execs/s
+[*] Fuzzing test case #991 (stats: map=3251, speed=14/s, crashes=0, paths=954)
+[+] New Path! Cov: 3253 | Execs: 992 | Speed: 14.02 execs/s
+[*] Fuzzing test case #992 (stats: map=3253, speed=14/s, crashes=0, paths=955)
+[+] New Path! Cov: 3254 | Execs: 994 | Speed: 14.02 execs/s
+[*] Fuzzing test case #994 (stats: map=3254, speed=14/s, crashes=0, paths=956)
+[+] New Path! Cov: 3255 | Execs: 1011 | Speed: 14.10 execs/s
+[*] Fuzzing test case #1011 (stats: map=3255, speed=14/s, crashes=0, paths=957)
+[+] New Path! Cov: 3274 | Execs: 1024 | Speed: 14.16 execs/s
+[*] Fuzzing test case #1024 (stats: map=3274, speed=14/s, crashes=0, paths=958)
+[+] New Path! Cov: 3277 | Execs: 1026 | Speed: 14.16 execs/s
+[*] Fuzzing test case #1026 (stats: map=3277, speed=14/s, crashes=0, paths=959)
+[+] New Path! Cov: 3279 | Execs: 1032 | Speed: 14.18 execs/s
+[*] Fuzzing test case #1032 (stats: map=3279, speed=14/s, crashes=0, paths=960)
+[+] New Path! Cov: 3280 | Execs: 1036 | Speed: 14.19 execs/s
+[*] Fuzzing test case #1036 (stats: map=3280, speed=14/s, crashes=0, paths=961)
+[+] New Path! Cov: 3285 | Execs: 1042 | Speed: 14.21 execs/s
+[*] Fuzzing test case #1042 (stats: map=3285, speed=14/s, crashes=0, paths=962)
+[+] New Path! Cov: 3286 | Execs: 1052 | Speed: 14.24 execs/s
+[*] Fuzzing test case #1052 (stats: map=3286, speed=14/s, crashes=0, paths=963)
+[+] New Path! Cov: 3298 | Execs: 1067 | Speed: 14.30 execs/s
+[*] Fuzzing test case #1067 (stats: map=3298, speed=14/s, crashes=0, paths=964)
+[+] New Path! Cov: 3299 | Execs: 1069 | Speed: 14.30 execs/s
+[*] Fuzzing test case #1069 (stats: map=3299, speed=14/s, crashes=0, paths=965)
+[*] Fuzzing test case #1093 (stats: map=3299, speed=14/s, crashes=0, paths=965)
+[+] New Path! Cov: 3373 | Execs: 1111 | Speed: 14.46 execs/s
+[*] Fuzzing test case #1111 (stats: map=3373, speed=14/s, crashes=0, paths=966)
+[+] New Path! Cov: 3374 | Execs: 1127 | Speed: 14.52 execs/s
+[*] Fuzzing test case #1127 (stats: map=3374, speed=15/s, crashes=0, paths=967)
+[*] Fuzzing test case #1149 (stats: map=3374, speed=15/s, crashes=0, paths=967)
+[+] New Path! Cov: 3375 | Execs: 1160 | Speed: 14.64 execs/s
+[*] Fuzzing test case #1160 (stats: map=3375, speed=15/s, crashes=0, paths=968)
+[+] New Path! Cov: 3376 | Execs: 1180 | Speed: 14.72 execs/s
+[*] Fuzzing test case #1180 (stats: map=3376, speed=15/s, crashes=0, paths=969)
+[+] New Path! Cov: 3416 | Execs: 1181 | Speed: 14.71 execs/s
+[*] Fuzzing test case #1181 (stats: map=3416, speed=15/s, crashes=0, paths=970)
+[+] New Path! Cov: 3417 | Execs: 1182 | Speed: 14.71 execs/s
+[*] Fuzzing test case #1182 (stats: map=3417, speed=15/s, crashes=0, paths=971)
+[+] New Path! Cov: 3418 | Execs: 1185 | Speed: 14.71 execs/s
+[*] Fuzzing test case #1185 (stats: map=3418, speed=15/s, crashes=0, paths=972)
+[+] New Path! Cov: 3464 | Execs: 1186 | Speed: 14.71 execs/s
+[*] Fuzzing test case #1186 (stats: map=3464, speed=15/s, crashes=0, paths=973)
+[+] New Path! Cov: 3473 | Execs: 1187 | Speed: 14.70 execs/s
+[*] Fuzzing test case #1187 (stats: map=3473, speed=15/s, crashes=0, paths=974)
+[+] New Path! Cov: 3475 | Execs: 1194 | Speed: 14.72 execs/s
+[*] Fuzzing test case #1194 (stats: map=3475, speed=15/s, crashes=0, paths=975)
+[+] New Path! Cov: 3481 | Execs: 1210 | Speed: 14.78 execs/s
+[*] Fuzzing test case #1210 (stats: map=3481, speed=15/s, crashes=0, paths=976)
+[*] Fuzzing test case #1234 (stats: map=3481, speed=15/s, crashes=0, paths=976)
+[+] New Path! Cov: 3485 | Execs: 1254 | Speed: 14.97 execs/s
+[*] Fuzzing test case #1254 (stats: map=3485, speed=15/s, crashes=0, paths=977)
+[+] New Path! Cov: 3486 | Execs: 1256 | Speed: 14.97 execs/s
+[*] Fuzzing test case #1256 (stats: map=3486, speed=15/s, crashes=0, paths=978)
+[+] New Path! Cov: 3490 | Execs: 1257 | Speed: 14.97 execs/s
+[*] Fuzzing test case #1257 (stats: map=3490, speed=15/s, crashes=0, paths=979)
+[+] New Path! Cov: 3498 | Execs: 1258 | Speed: 14.96 execs/s
+[*] Fuzzing test case #1258 (stats: map=3498, speed=15/s, crashes=0, paths=980)
+[+] New Path! Cov: 3499 | Execs: 1269 | Speed: 15.00 execs/s
+[*] Fuzzing test case #1269 (stats: map=3499, speed=15/s, crashes=0, paths=981)
+[*] Fuzzing test case #1290 (stats: map=3499, speed=15/s, crashes=0, paths=981)
+[+] New Path! Cov: 3515 | Execs: 1292 | Speed: 15.06 execs/s
+[*] Fuzzing test case #1292 (stats: map=3515, speed=15/s, crashes=0, paths=982)
+[+] New Path! Cov: 3516 | Execs: 1307 | Speed: 15.11 execs/s
+[*] Fuzzing test case #1307 (stats: map=3516, speed=15/s, crashes=0, paths=983)
+[+] New Path! Cov: 3519 | Execs: 1310 | Speed: 15.11 execs/s
+[*] Fuzzing test case #1310 (stats: map=3519, speed=15/s, crashes=0, paths=984)
+[*] Fuzzing test case #1335 (stats: map=3519, speed=15/s, crashes=0, paths=984)
+[*] Fuzzing test case #1359 (stats: map=3519, speed=15/s, crashes=0, paths=984)
+[+] New Path! Cov: 3521 | Execs: 1368 | Speed: 15.32 execs/s
+[*] Fuzzing test case #1368 (stats: map=3521, speed=15/s, crashes=0, paths=985)
+[+] New Path! Cov: 3525 | Execs: 1373 | Speed: 15.33 execs/s
+[*] Fuzzing test case #1373 (stats: map=3525, speed=15/s, crashes=0, paths=986)
+[+] New Path! Cov: 3526 | Execs: 1376 | Speed: 15.32 execs/s
+[*] Fuzzing test case #1376 (stats: map=3526, speed=15/s, crashes=0, paths=987)
+[+] New Path! Cov: 3531 | Execs: 1380 | Speed: 15.33 execs/s
+[*] Fuzzing test case #1380 (stats: map=3531, speed=15/s, crashes=0, paths=988)
+[+] New Path! Cov: 3532 | Execs: 1384 | Speed: 15.34 execs/s
+[*] Fuzzing test case #1384 (stats: map=3532, speed=15/s, crashes=0, paths=989)
+[*] Fuzzing test case #1406 (stats: map=3532, speed=15/s, crashes=0, paths=989)
+[*] Fuzzing test case #1429 (stats: map=3532, speed=15/s, crashes=0, paths=989)
+[+] New Path! Cov: 3542 | Execs: 1435 | Speed: 15.49 execs/s
+[*] Fuzzing test case #1435 (stats: map=3542, speed=15/s, crashes=0, paths=990)
+[+] New Path! Cov: 3543 | Execs: 1440 | Speed: 15.51 execs/s
+[*] Fuzzing test case #1440 (stats: map=3543, speed=16/s, crashes=0, paths=991)
+[+] New Path! Cov: 3545 | Execs: 1453 | Speed: 15.54 execs/s
+[*] Fuzzing test case #1453 (stats: map=3545, speed=16/s, crashes=0, paths=992)
+[+] New Path! Cov: 3546 | Execs: 1455 | Speed: 15.53 execs/s
+[*] Fuzzing test case #1455 (stats: map=3546, speed=16/s, crashes=0, paths=993)
+[*] Fuzzing test case #1479 (stats: map=3546, speed=16/s, crashes=0, paths=993)
+[+] New Path! Cov: 3547 | Execs: 1491 | Speed: 15.64 execs/s
+[*] Fuzzing test case #1491 (stats: map=3547, speed=16/s, crashes=0, paths=994)
+[+] New Path! Cov: 3548 | Execs: 1512 | Speed: 15.70 execs/s
+[*] Fuzzing test case #1512 (stats: map=3548, speed=16/s, crashes=0, paths=995)
+[+] New Path! Cov: 3550 | Execs: 1514 | Speed: 15.70 execs/s
+[*] Fuzzing test case #1514 (stats: map=3550, speed=16/s, crashes=0, paths=996)
+[+] New Path! Cov: 3554 | Execs: 1517 | Speed: 15.70 execs/s
+[*] Fuzzing test case #1517 (stats: map=3554, speed=16/s, crashes=0, paths=997)
+[*] Fuzzing test case #1540 (stats: map=3554, speed=16/s, crashes=0, paths=997)
+[*] Fuzzing test case #1562 (stats: map=3554, speed=16/s, crashes=0, paths=997)
+[+] New Path! Cov: 3595 | Execs: 1583 | Speed: 15.89 execs/s
+[*] Fuzzing test case #1583 (stats: map=3595, speed=16/s, crashes=0, paths=998)

@@ -1,0 +1,235 @@
+-- $Id: testes/bitwise.lua $
+-- See Copyright Notice in file lua.h
+
+print("testing bitwise operations")
+
+require "bwcoercion"
+
+local numbits = string.packsize('j') * 8
+
+assert(~0 == -1)
+
+assert((1 << (numbits - 1)) == math.mininteger)
+
+-- basic tests for bitwise operators;
+-- use variables to avoid constant folding
+local a, b, c, d
+a = 0xFFFFFFFFFFFFFFFF
+assert(a == -1 and a & -1 == a and a & 35 == 35)
+a = 0xF0F0F0F0F0F0F0F0
+assert(a | -1 == -1)
+assert(a ~ a == 0 and a ~ 0 == a and a ~ ~a == -1)
+assert(a >> 4 == ~a)
+a = 0xF0; b = 0xCC; c = 0xAA; d = 0xFD
+assert(a | b ~ c & d == 0xF4)
+
+a = 0xF0.0; b = 0xCC.0; c = "0xAA.0"; d = "0xFD.0"
+assert(a | b ~ c & d == 0xF4)
+
+a = 0xF0000000; b = 0xCC000000;
+c = 0xAA000000; d = 0xFD000000
+assert(a | b ~ c & d == 0xF4000000)
+assert(~~a == a and ~a == -1 ~ a and -d == ~d + 1)
+
+a = a << 32
+b = b << 32
+c = c << 32
+d = d << 32
+assert(a | b ~ c & d == 0xF4000000 << 32)
+assert(~~a == a and ~a == -1 ~ a and -d == ~d + 1)
+
+
+do   -- constant folding
+  local code = string.format("return -1 >> %d", math.maxinteger)
+  assert(load(code)() == 0)
+  local code = string.format("return -1 >> %d", math.mininteger)
+  assert(load(code)() == 0)
+  local code = string.format("return -1 read" and coroutine.status(f) == "suspended")
+assert(string.find(tostring(f), "thread"))
+local s,a,b,c,d
+s,a,b,c,d = coroutine.resume(f, {1,2,3}, {}, {1}, {'a', 'b', 'c'})
+assert(coroutine.isyieldable(f))
+assert(s and a == nil and coroutine.status(f) == "suspended")
+s,a,b,c,d = coroutine.resume(f)
+eqtab(_G.x, {})
+assert(s and a == 1 and b == nil)
+assert(coroutine.isyieldable(f))
+s,a,b,c,d = coroutine.resume(f, 1, 2, 3)
+eqtab(_G.x, {1, 2, 3})
+assert(s and a == 'a' and b == 'b' and c == 'c' and d == nil)
+s,a,b,c,d = coroutine.resume(f, "xuxu")
+eqtab(_G.x, {"xuxu"})
+assert(s and a == 1 and b == 2 and c == 3 and d == nil)
+assert(coroutine.status(f) == "dead")
+s, a = coroutine.resume(f, "xuxu")
+assert(not s and string.find(a, "dead") and coroutine.status(f) == "dead")
+
+_G.f = nil
+
+-- yields in tail calls
+local function foo (i) return coroutine.yield(i) end
+local f = coroutine.wrap(function ()
+  for i=1,10 do
+    assert(foo(i) == _G.x)
+  end
+  return 'a'
+end)
+for i=1,10 do _G.x = i; assert(f(i) == i) end
+_G.x = 'xuxu'; assert(f('xuxu') == 'a')
+
+_G.x = nil
+
+-- recursive
+local function pf (n, i)
+  coroutine.yield(n)
+  pf(n*i, i+1)
+end
+
+f = coroutine.wrap(pf)
+local s=1
+for i=1,10 do
+  assert(f(1, 1) == s)
+  s = s*i
+end
+
+-- sieve
+local function gen (n)
+  return coroutine.wrap(function ()
+    for i=2,n do coroutine.yield(i) end
+  end)
+end
+
+
+local function filter (p, g)
+  return coroutine.wrap(function ()
+    while 1 do
+      local n = g()
+      if n == nil then return end
+      if math.fmod(n, p) ~= 0 then coroutine.yield(n) end
+    end
+  end)
+end
+
+local x = gen(80)
+local a = {}
+while 1 do
+  local n = x()
+  if n == nil then break end
+  table.insert(a, n)
+  x = filter(n, x)
+end
+
+assert(#a == 22 and a[#a] == 79)
+x, a = nil
+
+
+do   -- "bug" in 5.4.2
+  local function foo () foo () end    -- just create a stack overflow
+  local co = coroutine.create(foo)
+  -- running this coroutine would overflow the unsigned short 'nci', the
+  -- counter of CallInfo structures available to the thread.
+  -- (The issue only manifests in an 'assert'.)
+  local st, msg = coroutine.resume(co)
+  assert(string.find(msg, "stack overflow"))
+  assert(coroutine.status(co) == "dead")
+end
+
+
+print("to-be-closed variables in coroutines")
+
+local function func2close (f)
+  return setmetatable({}, {__close = f})
+end
+
+do
+  -- ok to close a dead coroutine
+  local co = coroutine.create(print)
+  assert(coroutine.resume(co, "testing 'coroutine.close'"))
+  assert(coroutine.status(co) == "dead")
+  local st, msg = coroutine.close(co)
+  assert(st and msg == nil)
+  -- also ok to close it again
+  st, msg = coroutine.close(co)
+  assert(st and msg == nil)
+
+  local main = coroutine.running()
+
+  -- cannot close 'main'
+  local st, msg = pcall(coroutine.close, main);
+  assert(not st and string.find(msg, "main"))
+
+
+  -- cannot close a "normal" coroutine
+  ;(coroutine.wrap(function ()
+    local st, msg = pcall(coroutine.close, main)
+    assert(not st and string.find(msg, "normal"))
+  end))()
+
+  do   -- close a coroutine while closing it
+    local co
+    co = coroutine.create(
+      function()
+        local x <close> = func2close(function()
+            coroutine.close(co)   -- close it again
+         end)
+        coroutine.yield(20)
+      end)
+    local st, msg = coroutine.resume(co)
+    assert(st and msg == 20)
+    st, msg = coroutine.close(co)
+    assert(st and msg == nil)
+  end
+
+  -- to-be-closed variables in coroutines
+  local X
+
+  -- closing a coroutine after an error
+  local co = coroutine.create(error)
+  local st, msg = coroutine.resume(co, 100)
+  assert(not st and msg == 100)
+  st, msg = coroutine.close(co)
+  assert(not st and msg == 100)
+  -- after closing, no more errors
+  st, msg = coroutine.close(co)
+  assert(st and msg == nil)
+
+  co = coroutine.create(function ()
+    local x <close> = func2close(function (self, err)
+      assert(err == nil); X = false
+    end)
+    X = true
+    coroutine.yield()
+  end)
+  coroutine.resume(co)
+  assert(X)
+  assert(coroutine.close(co))
+  assert(not X and coroutine.status(co) == "dead")
+
+  -- error closing a coroutine
+  local x = 0
+  co = coroutine.create(function()
+    local y <close> = func2close(function (self,err)
+      assert(err == 111)
+      x = 200
+      error(200)
+    end)
+    local x <close> = func2cl
+
+
+if T then   -- test GC parameter codification
+  for _, percentage in ipairs{5, 10, 12, 20, 50, 100, 200, 500} do
+    local param = T.codeparam(percentage)   -- codify percentage
+    for _, value in ipairs{1, 2, 10, 100, 257, 1023, 6500, 100000} do
+      local exact = value*percentage // 100
+      local aprox = T.applyparam(param, value)   -- apply percentage
+      -- difference is at most 10% (+1 compensates difference due to
+      -- rounding to integers)
+      assert(math.abs(aprox - exact) <= exact/10 + 1)
+    end
+  end
+end
+
+collectgarbage(oldmode)
+
+print('OK')
+

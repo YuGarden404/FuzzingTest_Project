@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<foo
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="decimal-2.xsd">
+    <!-- The good odoc. -->
+    <val>0.1</val>
+    <val>0.001</val>
+ =" <val>0.0</val>
+    <val>-0.0</val>
+    <val>1</val>
+    <!-- The bad Vnes. -->
+    <val>-0.1</v.1</valÿ
+  >-1</val>
+</foo>

@@ -1,0 +1,5 @@
+<a>
+  <b>
+    <c><b/>
+<!DOCTYPE root SYSTEM 't6.dtd'>
+<root>&abc;</root>

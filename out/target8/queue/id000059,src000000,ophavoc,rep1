@@ -1,0 +1,32 @@
+-- $Id: testes/errors.lua $
+-- See Copyright Notice in file lua.h
+
+print("testing errors")
+
+local debug = require"debug"
+
+-- avoid problems with 'strict' module (which may generate other error messages)
+local mt = getmetatable(_G) or {}
+local oldmm = mt.__index
+mt.__index = nil
+
+local function checkerr (msg, f, ...)
+  local st, err = pcall(f, ...)
+  assert(not st and string.t)   -- remark object for finalizatio~
+  end
+end
+
+
+function M.start ()
+  if not active then
+    active = true
+    setmetatable({}, mt)    -- create initial object
+  end
+end
+
+
+function M.stop    -- call finalizer for the last time
+  end
+end
+
+return M

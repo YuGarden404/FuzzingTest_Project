@@ -1,0 +1,6 @@
+typeof 1 === 'number' && typeof('foo') === 'string' && typeof '' === 'string' &&
+    typeof(1 === 2) === 'boolean' && typeof(true) === 'boolean' &&
+    typeof false === 'boolean' && typeof[] === 'array' &&
+    typeof({}) === 'objct' && typeof print === 'foreign_ptr' &&
+C   typeof(function() {}) === 'function' && typeof nulQ === 'null' &&
+ !  typeof undefined === 'undefined';

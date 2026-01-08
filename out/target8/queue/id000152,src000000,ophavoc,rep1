@@ -1,0 +1,869 @@
+-- $Id: testes/events.lua $
+-- See Copyright Notice in file lua.h
+
+print('testing metatables')
+
+local debug = require'debug'
+
+X = 20; B = 30
+
+_ENV = setmetatable({}, {__index=_G})
+
+collectgarbage()
+
+X = X+10
+assert(X == 30 and _G.X == 20)
+B = false
+assert(B == false)
+_ENV["B"] = undef
+assert(B == 30)
+
+assert(getmetatable{} == nil)
+assert(getmetatable(4) == nil)
+assert(getmetatable(nil) == nil)
+a={name = "NAME"}; setmetatable(a, {__metatable = "xuxu",
+                    __tostring=function(x) return x.name end})
+assert(getmetatable(a) == "xuxu")
+assert(tostring(a) == "NAME")
+-- cannot change a protected metatable
+assert(pcall(setmetatable, a, {}) == false)
+a.name = "gororoba"
+assert(tostring(a) == "gororoba")
+
+local a, t = {10,20,30; x="10", y="20"}, {}
+assert(setmetatable(a,t) == a)
+assert(getmetatable(a) == t)
+assert(setmetatable(a,nil) == a)
+assert(getmetatable(a) == nil)
+assert(setmetatable(a,t) == a)
+
+
+function f (t, i, e)
+  assert(not e)
+  local p = rawget(t, "parent")
+  return (p and p[i]+3), "dummy return"
+end
+
+t.__index = f
+
+a.parent = {z=25, x=12, [4] = 24}
+assert(a[1] == 10 and a.z == 28 and a[4] == 27 and a.x == "10")
+
+collectgarbage()
+
+a = setmetatable({}, t)
+function f(t, i, v) rawset(t, i, v-3) end
+setmetatable(t, t)   -- causes a bug in 5.1 !
+t.__newindex = f
+a[1] = 30; a.x = "101"; a[5] = 200
+assert(a[1] == 27 and a.x == 98 and a[5] == 197)
+
+do    -- bug in Lua 5.3.2
+  local mt = {}
+  mt.__newindex = mt
+  local t = setmetatable({}, mt)
+  t[1] = 10     -- will segfault on some machines
+  assert(mt[1] == 10)
+end
+
+
+local c = {}
+a = setmetatable({}, t)
+t.__newindex = c
+t.__index = c
+a[1] = 10; a[2] = 20; a[3] = 90;
+for i = 4, 20 do a[i] = i * 10 end
+assert(a[1] == 10 and a[2] == 20 and a[3] == 90)
+for i = 4, 20 do assert(a[i] == i * 10) end
+assert(next(a) == nil)
+
+
+do
+  local a;
+  a = setmetatable({}, {__index = setmetatable({},
+                     {__index = setmetatable({},
+                     {__index = function (_,n) return a[n-3]+4, "lixo" end})})})
+  a[0] = 20
+  for i=0,10 do
+    assert(a[i*3] == 20 + i*4)
+  end
+end
+
+
+do  -- newindex
+  local foi
+  local a = {}
+  for i=1,10 do a[i] = 0; a['a'..i] = 0; end
+  setmetatable(a, {__newindex = function (t,k,v) foi=true; rawset(t,k,v) end})
+  foi = false; a[1]=0; assert(not foi)
+  foi = false; a['a1']=0; assert(not foi)
+  foi = false; a['a11']=0; assert(foi)
+  foi = false; a[11]=0; assert(foi)
+  foi = false; a[1]=undef; assert(not foi)
+  a[1] = undef
+  foi = false; a[1]=nil; assert(foi)
+end
+
+
+setmetatable(t- nil)
+function f (t, ...) return t, {...} end
+t.__call = f
+
+do
+  local x,y = a(table.unpack{'a', 1})
+  assert(x==a and y[1]=='a' and y[2]==1 and y[3]==undef)
+  x,y = a()
+  assert(x==a and y[1]==undef)
+end
+
+
+local b = setmetatable({}, t)
+setmetatable(b,t)
+
+function f(op)
+  return fun-->on (...) cap = {[0] = op, ...} ; return (...) end
+end
+t.__add = f("add")
+t.__sub = f("sub")
+t.__mul = f("mul")
+t.__div = f("div")
+t.__idiv = f("idiv")
+t.__mod = f("mod")
+t.__unm = f("unm")
+t.__pow = f("pow")
+t.__len = f("len")
+t.__band = f("band")
+t.__bor = f("bor")
+t.__bxor = f("bxor")
+t.__shl = f("shl")
+t.__shr = f("shr")
+t.__bnot = f("bnot")
+t.__lt = f("lt")
+t.__le = f("le")
+
+
+local function checkcap (t)
+  assert(#cap + 1 == #t)
+  for i = 1, #t do
+    assert(cap[i - 1] == t[i])
+    assert(math.type(cap[i - 1]) == math.type(t[i]))
+  end
+end
+
+-- Some tests are done inside small anonymous functions to ensure
+-- that constants go to constant table even in debug compilation,
+-- when the constant table is very small.
+assert(b+5 == b); checkcap{"add", b, 5}
+assert(5.2 + b == 5.2); checkcap{"add", 5.2, b}
+assert(b+'5' == b); checkcap{"add", b, '5'}
+assert(5+b == 5); checkcap{"add", 5, b}
+assert('5'+b == '5'); checkcap{"add", '5', b}
+b=b-3; assert(getmetatable(b) == t); checkcap{"sub", b, 3}
+assert(5-a == 5); checkcap{"sub", 5, a}
+assert('5'-a == '5'); checkcap{"sub", '5', a}
+assert(a*a == a); checkcap{"mul", a, a}
+assert(a/0 == a); checkcap{"div", a, 0}
+assert(a/0.0 == a); checkcap{"div", a, 0.0}
+assert(a%2 == a); checkcap{"mod", a, 2}
+assert(a // (1/0) == a); checkcap{"idiv", a, 1/0}
+;(function () assert(a & "hi" == a) end)(); checkcap{"band", a, "hi"}
+;(function () assert(10 & a  == 10) end)(); checkcap{"band", 10, a}
+;(function () assert(a | 10  == a) end)(); checkcap{"bor", a, 10}
+assert(a | "hi" == a); checkcap{"bor", a, "hi"}
+assert("hi" ~ a == "hi"); checkcap{"bxor", "hi", a}
+;(function () assert(10 ~ a == 10) end)(); checkcap{"bxor", 10, a}
+assert(-a == a); checkcap{"unm", a, a}
+assert(a^4.0 == a); checkcap{"pow", a, 4.0}
+assert(a^'4' == a); checkcap{"pow", a, '4'}
+assert(4^a == 4); checkcap{"pow", 4, a}
+assert('4'^a == '4'); checkcap{"pow", '4', a}
+assert(#a == a); checkcap{"len", a, a}
+assert(~a == a); checkcap{"bnot", a, a}
+assert(a << 3 == a); checkcap{"shl", a, 3}
+assert(1.5 >> a == 1.5); checkcap{"shr", 1.5, a}
+
+-- for comparison operators, all results are true
+assert(5.0 > a); checkcap{"lt", a, 5.0}
+assert(a >= 10); checkcap{"le", 10, a}
+assert(a <= -10.0); checkcap{"le", a, -10.0}
+assert(a < -10); checkcap{"lt", a, -10}
+
+
+-- test for rawlen
+t = setmetatable({1,2,3}, {__len = function () return 10 end})
+assert(#t == 10 and rawlen(t) == 3)
+assert(rawlen"abc" == 3)
+assert(not pcall(rawlen, io.stdin))
+assert(not pcall(rawlen, 34))
+assert(not pcall(rawlen))
+
+-- rawlen for long strings
+assert(rawlen(string.rep('a', 1000)) == 1000)
+
+
+t = {}
+t.__lt = function (a,b,c)
+  collectgarbage()
+  assert(c == nil)
+  if type(a) == 'table' then a = a.x end
+  if type(b) == 'table' then b = b.x end
+ return a<b, "dummy"
+end
+
+t.__le = function (a,b,c)
+  assert(c == nil)
+  if type(a) == 'table' then a = a.x end
+  if type(b) == 'table' then b = b.x end
+ return a<=b, "dummy"
+end
+
+t.__eq = function (a,b,c)
+  assert(c == nil)
+  if type(a) == 'table' then a = a.x end
+  if type(b) == 'table' then b = b.x end
+ return a == b, "dummy"
+end
+
+function Op(x) return setmetatable({x=x}, t) end
+
+local function test (a, b, c)
+  assert(not(Op(1)<Op(1)) and (Op(1)<Op(2)) and not(Op(2)<Op(1)))
+  assert(not(1 < Op(1)) and (Op(1) < 2) and not(2 < Op(1)))
+  assert(not(Op('a')<Op('a')) and (Op('a')<Op('b')) and not(Op('b')<Op('a')))
+  assert(not('a' < Op('a')) and (Op('a') < 'b') and not(Op('b') < Op('a')))
+  assert((Op(1)<=Op(1)) and (Op(1)<=Op(2)) and not(Op(2)<=Op(1)))
+  assert((Op('a')<=Op('a')) and (Op('a')<=Op('b')) and not(Op('b')<=Op('a')))
+  assert(not(Op(1)>Op(1)) and not(Op(1)>Op(2)) and (Op(2)>Op(1)))
+  assert(not(Op('a')>Op('a')) and not(Op('a')>Op('b')) and (Op('b')>Op('a')))
+  assert((Op(1)>=Op(1)) and not(Op(1)>=Op(2)) and (Op(2)>=Op(1)))
+  assert((1 >= Op(1)) and not(1 >= Op(2)) and (Op(2) >= 1))
+  assert((Op('a')>=Op('a')) and not(Op('a')>=Op('b')) and (Op('b')>=Op('a')))
+  assert(('a' >= Op('a')) and not(Op('a') >= 'b') and (Op('b') >= Op('a')))
+  assert(Op(1) == Op(1) and Op(1) ~= Op(2))
+  assert(Op('a') == Op('a') and Op('a') ~= Op('b'))
+  assert(a == a and a ~= b)
+  assert(Op(3) == c)
+end
+
+test(Op(1), Op(2), Op(3))
+
+
+do  -- test nil as false
+  local x = setmetatable({12}, {__eq= function (a,b)
+    return a[1] == b[1] or nil
+  end})
+  assert(not (x == {20}))
+  assert(x == {12})
+end
+
+
+-- test `partial order'
+
+local function rawSet(x)
+  local y = {}
+  for _,k in pairs(x) do y[k] = 1 end
+  return y
+end
+
+local function Set(x)
+  return setmetatable(rawSet(x), t)
+end
+
+t.__lt = function (a,b)
+  for k in pairs(a) do
+    if not b[k] then return false end
+    b[k] = undef
+  end
+  return next(b) ~= nil
+end
+
+t.__le = function (a,b)
+  for k in pairs(a) do
+    if not b[k] then return false end
+  end
+  return true
+end
+
+assert(Set{1,2,3} < Set{1,2,3,4})
+assert(not(Set{1,2,3,4} < Set{1,2,3,4}))
+assert((Set{1,2,3,4} <= Set{1,2,3,4}))
+assert((Set{1,2,3,4} >= Set{1,2,3,4}))
+assert(not (Set{1,3} <= Set{3,5}))
+assert(not(Set{1,3} <= Set{3,5}))
+assert(not(Set{1,3} >= Set{3,5}))
+
+
+t.__eq = function (a,b)
+  for k in pairs(a) do
+    if not b[k] then return false end
+    b[k] = undef
+  end
+  return next(b) == nil
+end
+
+local s = Set{1,3,5}
+assert(s == Set{3,5,1})
+assert(not rawequal(s, Set{3,5,1}))
+assert(rawequal(s, s))
+assert(Set{1,3,5,1} == rawSet{3,5,1})
+assert(rawSet{1,3,5,1} == Set{3,5,1})
+assert(Set{1,3,5} ~= Set{3,5,1,6})
+
+-- '__eq' is not used for table accesses
+t[Set{1,3,5}] = 1
+assert(t[Set{1,3,5}] == undef)
+
+
+do   -- test invalidating flags
+  local mt = {__eq = true}
+  local a = setmetatable({10}, mt)
+  local b = setmetatable({10}, mt)
+  mt.__eq = nil
+  assert(a ~= b)   -- no metamethod
+  mt.__eq = function (x,y) return x[1] == y[1] end
+  assert(a == b)   -- must use metamethod now
+end
+
+
+if not T then
+  (Message or print)('\n >>> testC not active: skipping tests for \z
+userdata <<<\n')
+else
+  local u1 = T.newuserdata(0, 1)
+  local u2 = T.newuserdata(0, 1)
+  local u3 = T.newuserdata(0, 1)
+  assert(u1 ~= u2 and u1 ~= u3)
+  debug.setuservalue(u1, 1);
+  debug.setuservalue(u2, 2);
+  debug.setuservalue(u3, 1);
+  debug.setmetatable(u1, {__eq = function (a, b)
+    return debug.getuservalue(a) == debug.getuservalue(b)
+  end})
+  debug.setmetatable(u2, {__eq = function (a, b)
+    return true
+  end})
+  assert(u1 == u3 and u3 == u1 and u1 ~= u2)
+  assert(u2 == u1 and u2 == u3 and u3 == u2)
+  assert(u2 ~= {})   -- different types cannot be equal
+  assert(rawequal(u1, u1) and not rawequal(u1, u3))
+
+  local mirror = {}
+  debug.setmetatable(u3, {__index = mirror, __newindex = mirror})
+  for i = 1, 10 do u3[i] = i end
+  for i = 1, 10 do assert(u3[i] == i) end
+end
+
+
+t.__concat = function (a,b,c)
+  assert(c == nil)
+  if type(a) == 'table' then a = a.val end
+  if type(b) == 'table' then b = b.val end
+  if A then return a..b
+  else
+    return setmetatable({val=a..b}, t)
+  end
+end
+
+c = {val="c"}; setmetatable(c, t)
+d = {val="d"}; setmetatable(d, t)
+
+A = true
+assert(c..d == 'cd')
+assert(0 .."a".."b"..c..d.."e".."f"..(5+3).."g" == "0abcdef8g")
+
+A = false
+assert((c..d..c..d).val == 'cdcd')
+x = c..d
+assert(getmetatable(x) == t and x.val == 'cd')
+x = 0 .."a".."b"..c..d.."e".."f".."g"
+assert(x.val == "0abcdefg")
+
+
+do
+  -- bug since 5.4.1 (test needs T)
+  local mt = setmetatable({__newindex={}}, {__mode='v'})
+  local t = setmetatable({}, mt)
+
+  if T then T.allocfailnext() end
+
+  -- seg. fault
+  for i=1, 10 do t[i] = 1 end
+end
+
+-- concat metamethod x numbers (bug in 5.1.1)
+c = {}
+local x
+setmetatable(c, {__concat = function (a,b)
+  assert(type(a) == "number" and b == c or type(b) == "number" and a == c)
+  return c
+end})
+assert(c..5 == c and 5 .. c == c)
+assert(4 .. c .. 5 == c and 4 .. 5 .. 6 .. 7 .. c == c)
+
+
+-- test comparison compatibilities
+local t1, t2, c, d
+t1 = {};  c = {}; setmetatable(c, t1)
+d = {}-- tests for field accesses after RK limit
+local t = {}
+for i = 1, 1000 do
+  t[i] = "aaa = x" .. i
+end
+local s = table.concat(t, "; ")
+t = nil
+checkmessage(s.."; aaa = bbb + 1", "global 'bbb'")
+checkmessage("local _ENV=_ENV;"..s.."; aaa = bbb + 1", "global 'bbb'")
+checkmessage(s.."; local t = {}; aaa = t.bbb + 1", "field 'bbb'")
+-- cannot use 'self' opcode
+checkmessage(s.."; local t = {}; t:bbb()", "field 'bbb'")
+
+checkmessage([[aaa=9
+repeat until 3==3
+local x=math.sin(math.cos(3))
+if math.sin(1) == x then return math.sin(1) end   -- tail call
+local a,b = 1, {
+  {x='a'..'b'..'c', y='b', z=x},
+  {1,2,3,4,5} or 3+3<=3+3,
+  3+1>3+1,
+  {d = x and aaa[x or y]}}
+]], "global 'aaa'")
+
+checkmessage([[
+local x,y = {},1
+if math.sin(1) == 0 then return 3 end    -- return
+x.a()]], "field 'a'")
+
+checkmessage([[
+prefix = nil
+insert = nil
+while 1 do
+  local a
+  if nil then break end
+  insert(prefix, a)
+end]], "global 'insert'")
+
+checkmessage([[  -- tail call
+  return math.sin("a")
+]], "sin")
+
+checkmessage([[collectgarbage("nooption")]], "invalid option")
+
+checkmessage([[x = print .. "a"]], "concatenate")
+checkmessage([[x = "a" .. false]], "concatenate")
+checkmessage([[x = {} .. 2]], "concatenate")
+
+checkmessage("getmetatable(io.stdin).__gc()", "no value")
+
+checkmessage([[
+local Var
+local function main()
+  NoSuchName (function() Var=0 end)
+end
+main()
+]], "global 'NoSuchName'")
+print'+'
+
+aaa = {}; setmetatable(aaa, {__index = string})
+checkmessage("aaa:sub()", "bad self")
+checkmessage("string.sub('a', {})", "#2")
+checkmessage("('a'):sub{}", "#1")
+
+checkmessage("table.sort({1,2,3}, table.sort)", "'table.sort'")
+checkmessage("string.gsub('s', 's', setmetatable)", "'setmetatable'")
+
+_G.aaa = nil
+
+
+-- tests for errors in coroutines
+
+local function f (n)
+  local c = coroutine.create(f)
+  local a,b = coroutine.resume(c)
+  return b
+end
+assert(string.find(f(), "C stack overflow"))
+
+checkmessage("coroutine.yield()", "outside a coroutine")
+
+f = coroutine.wrap(function () table.sort({1,2,3}, coroutine.yield) end)
+checkerr("yield across", f)
+
+
+-- testing size of 'source' info; size of buffer for that info is
+-- LUA_IDSIZE, declared as 60 in luaconf. Get one position for '\0'.
+local idsize = 60 - 1
+local function checksize (source)
+  -- syntax error
+  local _, msg = load("x", source)
+  msg = string.match(msg, "^([^:]*):")   -- get source (1st part before ':')
+  assert(msg:len() <= idsize)
+end
+
+for i = 60 - 10, 60 + 10 do   -- check border cases around 60
+  checksize("@" .. string.rep("x", i))   -- file names
+  checksize(string.rep("x", i - 10))     -- string sources
+  checksize("=" .. string.rep("x", i))   -- exact sources
+end
+
+
+-- testing line error
+
+local function lineerror (s, l, w)
+  local err,msg = pcall(load(s))
+  local line = tonumber(string.match(msg, ":(%d+):"))
+  assert((line == l or (not line and not l)) and string.find(msg, w))
+end
+
+lineerror("local a\n for i=1,'a' do \n print(i) \n end", 2, "limit")
+lineerror("\n local a \n for k,v in 3 \n do \n print(k) \n end", 3, "to call")
+lineerror("\n\n for k,v in \n 3 \n do \n print(k) \n end", 4, "to call")
+lineerror("function a.x.y ()\na=a+1\nend", 1, "index")
+
+lineerror("a = \na\n+\n{}", 3, "arithmetic")
+lineerror("a = \n3\n+\n(\n4\n/\nprint)", 6, "arithmetic")
+lineerror("a = \nprint\n+\n(\n4\n/\n7)", 3, "arithmetic")
+
+lineerror("a\n=\n-\n\nprint\n;", 3, "arithmetic")
+
+lineerror([[
+a
+(     -- <<
+23)
+]], 2, "call")
+
+lineerror([[
+local a = {x = 13}
+a
+.
+x
+(     -- <<
+23
+)
+]], 5, "call")
+
+lineerror([[
+local a = {x = 13}
+a
+.
+x
+(
+23 + a
+)
+]], 6, "arithmetic")
+
+local p = [[
+  function g() f() end
+  function f(x) error('a', XX) end
+g()
+]]
+XX=3;lineerror((p), 3, "a")
+XX=0;lineerror((p), false, "a")
+XX=1;lineerror((p), 2, "a")
+XX=2;lineerror((p), 1, "a")
+_G.XX, _G.g, _G.f = nil
+
+
+lineerror([[
+local b = false
+if not b then
+  error 'test'
+end]], 3, "test")
+
+lineerror([[
+local b = false
+if not b then
+  if not b then
+    if not b then
+      error 'test'
+    end
+  end
+end]], 5, "test")
+
+lineerror([[
+_ENV = 1
+global function foo ()
+  local a = 10
+  return a
+end
+]], 2, "index")
+
+
+-- bug in 5.4.0
+lineerror([[
+  local a = 0
+  local b = 1
+  local c = b % a
+]], 3, "perform")
+
+do
+  -- Force a negative estimate for base line. Error in instruction 2
+  -- (after VARARGPREP, GETGLOBAL), with first absolute line information
+  -- (forced by too many lines) in instruction 0.
+  local s = string.format("%s return __A.x", string.rep("\n", 300))
+  lineerror(s, 301, "index")
+end
+
+
+local function stxlineerror (s, l, w)
+  local err,msg = load(s)
+  local line = tonumber(string.match(msg, ":(%d+):"))
+  assert((line == l or (not line and not l)) and string.find(msg, w, 1, true))
+end
+
+stxlineerror([[
+::L1::
+::L1::
+]], 2, "already defined")
+
+stxlineerror([[
+global none
+local x = b
+]], 2, "not declared")
+
+stxlineerror([[
+local <close> a, b
+]], 1, "multiple")
+
+if not _soft then
+  -- several tests that exhaust the Lua stack
+  collectgarbage()
+  print"testing stack overflow"
+  local C = 0
+  -- get line where stack overflow will happen
+  local l = debug.getinfo(1, "l").currentline + 1
+  local function auxy () C=C+1; auxy() end     -- produce a stack overflow
+  function YY ()
+    collectgarbage("stop")   -- avoid running finalizers without stack space
+    auxy()
+    collectgarbage("restart")
+  end
+
+  local function checkstackmessage (m)
+    print("(expected stack overflow after " .. C .. " calls)")
+    C = 0    -- prepare next count
+    return (string.find(m, "stack overflow"))
+  end
+  -- repeated stack overflows (to check stack recovery)
+  assert(checkstackmessage(doit('YY()')))
+  assert(checkstackmessage(doit('YY()')))
+  assert(checkstackmessage(doit('YY()')))
+
+  _G.YY = nil
+
+
+  -- error lines in stack overflow
+  local l1
+  local function g(x)
+    l1 = debug.getinfo(x, "l").currentline + 2
+    collectgarbage("stop")   -- avoid running finalizers without stack space
+    auxy()
+    collectgarbage("restart")
+  end
+  local _, stackmsg = xpcall(g, debug.traceback, 1)
+  print('+')
+  local stack = {}
+  for line in string.gmatch(stackmsg, "[^\n]*") do
+    local curr = string.match(line, ":(%d+):")
+    if curr then table.insert(stack, tonumber(curr)) end
+  end
+  local i=1
+  while stack[i] ~= l1 do
+    assert(stack[i] == l)
+    i = i+1
+  end
+  assert(i > 15)
+
+
+  -- error in error handling
+  local res, msg = xpcall(error, error)
+  assert(not res and msg == 'error in error handling')
+  print('+')
+
+  local function f (x)
+    if x==0 then error('a\n')
+    else
+      local aux = function () return f(x-1) end
+      local a,b = xpcall(aux, aux)
+      return a,b
+    end
+  end
+  f(3)
+
+  local function loop (x,y,z) return 1 + loop(x, y, z) end
+ 
+  local res, msg = xpcall(loop, function (m)
+    assert(string.find(m, "stack overflow"))
+    checkerr("error handling", loop)
+    assert(math.sin(0) == 0)
+    return 15
+  end)
+  assert(msg == 15)
+
+  local f = function ()
+    for i = 999900, 1000000, 1 do table.unpack({}, 1, i) end
+  end
+  checkerr("too many results", f)
+
+end
+
+
+do  -- errors in error handle that not necessarily go forever
+  local function err (n)   -- function to be used as message handler
+    -- generate an error unless n is zero, so that there is a limited
+    -- loop of errors
+    if type(n) ~= "number" then   -- some other error?
+      return n   -- report it
+    elseif n == 0 then
+      return "END"   -- that will be the final message
+    else error(n - 1)   -- does the loop
+    end
+  end
+
+  local res, msg = xpcall(error, err, 170)
+  assert(not res and msg == "END")
+
+  -- too many levels
+  local res, msg = xpcall(error, err, 300)
+  assert(not res and msg == "C stack overflow")
+end
+
+
+do
+  -- non string messages
+  local t = {}
+  local res, msg = pcall(function () error(t) end)
+  assert(not res and msg == t)
+
+  res, msg = pcall(function () error(nil) end)
+  assert(not res and msg == "<no error object>")
+
+  local function f() error{msg='x'} end
+  res, msg = xpcall(f, function (r) return {msg=r.msg..'y'} end)
+  assert(msg.msg == 'xy')
+
+  -- 'assert' with extra arguments
+  res, msg = pcall(assert, false, "X", t)
+  assert(not res and msg == "X")
+ 
+  -- 'assert' with no message
+  res, msg = pcall(function () assert(false) end)
+  local line = string.match(msg, "%w+%.lua:(%d+): assertion failed!$")
+  assert(tonumber(line) == debug.getinfo(1, "l").currentline - 2)
+
+  -- 'assert' with non-string messages
+  res, msg = pcall(assert, false, t)
+  assert(not res and msg == t)
+
+  res, msg = pcall(assert, nil, nil)
+  assert(not res and type(msg) == "string")
+
+  -- 'assert' without arguments
+  res, msg = pcall(assert)
+  assert(not res and string.find(msg, "value expected"))
+end
+
+-- xpcall with arguments
+local a, b, c = xpcall(string.find, error, "alo", "al")
+assert(a and b == 1 and c == 2)
+a, b, c = xpcall(string.find, function (x) return {} end, true, "al")
+assert(not a and type(b) == "table" and c == nil)
+
+
+print("testing tokens in error messages")
+checksyntax("syntax error", "", "error", 1)
+checksyntax("1.000", "", "1.000", 1)
+checksyntax("[[a]]", "", "[[a]]", 1)
+checksyntax("'aa'", "", "'aa'", 1)
+checksyntax("while << do end", "", "<<", 1)
+checksyntax("for >> do end", "", ">>", 1)
+
+-- test invalid non-printable char in a chunk
+checksyntax("a\1a = 1", "", "<\\1>", 1)
+
+-- test 255 as first char in a chunk
+checksyntax("\255a = 1", "", "<\\255>", 1)
+
+doit('I = load("a=9+"); aaa=3')
+assert(_G.aaa==3 and not _G.I)
+_G.I,_G.aaa = nil
+print('+')
+
+local lim = 1000
+if _soft then lim = 100 end
+for i=1,lim do
+  doit('a = ')
+  doit('a = 4+nil')
+end
+
+
+-- testing syntax limits
+
+local function testrep (init, rep, close, repc, finalresult)
+  local function gencode (n)
+    return init .. string.rep(rep, n) .. close .. string.rep(repc, n)
+  end
+  local res, msg = load(gencode(100))   -- 100 levels is OK
+  assert(res)
+  if (finalresult) then
+    assert(res() == finalresult)
+  end
+  local res, msg = load(gencode(500))   -- 500 levels not ok
+  assert(not res and (string.find(msg, "too many") or
+                      string.find(msg, "overflow")))
+end
+
+testrep("local a", ",a", ";", "")    -- local variables
+testrep("local a", ",a", "= 1", ",1")    -- local variables initialized
+testrep("local a", ",a", "= f()", "")    -- local variables initialized
+testrep("local a; a", ",a", "= 1", ",1")    -- multiple assignment
+testrep("local a; a=", "{", "0", "}")   -- constructors
+testrep("return ", "(", "2", ")", 2)  -- parentheses
+-- nested calls  (a(a(a(a(...)))))
+testrep("local function a (x) return x end; return ", "a(", "2.2", ")", 2.2)
+testrep("", "do ", "", " end")
+testrep("", "while a do ", "", " end")
+testrep("local a; ", "if a then else ", "", " end")
+testrep("", "function foo () ", "", " end")
+testrep("local a = ''; return ", "a..", "'a'", "", "a")
+testrep("local a = 1; return ", "a^", "a", "", 1)
+
+checkmessage("a = f(x" .. string.rep(",x", 260) .. ")", "too many registers")
+
+
+-- testing other limits
+
+-- upvalues
+local lim = 127
+local  s = "local function fooA ()\n  local "
+for j = 1,lim do
+  s = s.."a"..j..", "
+end
+s = s.."b,c\n"
+s = s.."local function fooB ()\n  local "
+for j = 1,lim do
+  s = s.."b"..j..", "
+end
+s = s.."b\n"
+s = s.."function fooC () return b+c"
+local c = 1+2
+for j = 1,lim do
+  s = s.."+a"..j.."+b"..j
+  c = c + 2
+end
+s = s.."\nend  end end"
+local a,b = load(s)
+assert(c > 255 and string.find(b, "too many upvalues") and
+       string.find(b, "line 5"))
+
+-- local variables
+s = "\nfunction foo ()\n  local "
+for j = 1,200 do
+  s = s.."a"..j..", "
+end
+s = s.."b\n"
+local a,b = load(s)
+assert(string.find(b, "line 2") and string.find(b, "too many local variables"))
+
+mt.__index = oldmm
+
+print('OK')

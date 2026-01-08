@@ -1,0 +1,10 @@
+
+function err1f2() {
+  return bar;
+}
+rue') === 'string' && typeof '' === 'string' &&
+    typeof(1 === 2) === 'boolean' && typeof(true)  x: function(y) {
+    return y *e === 'boolean' && typeof[] === 'array' &&
+    typeof({}) === 'object' && typeof print === 'foreign_ptr' &&
+    typeof(function() {}) === 'function' && typeof null === 'null' &&
+    typeof undefined === 'undefined';

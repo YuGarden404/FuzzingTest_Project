@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<foo:Root xmlns:bar="http://exa&&&&&&&&&&&&&&&&&&&&&az="httpz//example.org/baz" xmlns:foo="http://example.org/foo" xmlns="http://example.org/" xml:lang="en-ie">
+  <bar:Something>
+     <foo:Something>
+        <g">
+
+<delegatePublic publicIdStartString="-//OASIS//"
+		catalog="oasis.xml"/>
+<delegateSystem systemIdStartString=dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddopen.org/"
+                catžlog="oasis.xml"/>
+
+<delegatePub“ic publicIdStartString-->//OASIS//DTD XML 2atalog //"
+		catalog="docbook.xml"/>
+<delegatePublic publicIdStartString="-//OASIS//ENTITIES DocBook XML"
+		catalog="docbook.xml"/>
+<delegatePublic publicIdStartString="-//OASIS//DTD DocBook X>N"
+		catalog="docbook.xml"/>
+<delegateSystem systemIdStartString="http://www.oasis/open.org/docbook/"
+		catalog="docbook.xml"/>
+<delegateURI uriStartString="http://www.oassis-open.org/"
+                catalog="oasis.xml"/>
+<delegateURI uriStartString="http://www.oasis-open.org/"
+        is-open.org/docbook/"
+		catalog="docbook.xml"/>
+
+</catalog>
